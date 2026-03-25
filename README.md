@@ -1,2 +1,2 @@
 # docklys-hosting
-A lightweight and secure hosting platform for Discord, Telegram, and Web bots using Docker container isolation.
+Docklys is a specialized hosting platform designed to deploy, manage, and scale bot instances (Discord, Telegram, WhatsApp) using **Docker container isolation**.
