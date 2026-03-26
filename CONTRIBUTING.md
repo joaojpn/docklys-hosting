@@ -4,13 +4,13 @@ Thank you for your interest in contributing!
 
 ## Reporting Bugs
 
-1. Check if the bug was already reported in [Issues](https://github.com/joaojpn/docklys/issues).
+1. Check if the bug was already reported in [Issues](https://github.com/joaojpn/docklys-hosting/issues).
 2. If not, open a new issue using the **Bug Report** template.
 3. Be detailed — include steps to reproduce, expected behavior, and your environment.
 
 ## Suggesting Features
 
-1. Check [Issues](https://github.com/joaojpn/docklys/issues) to avoid duplicates.
+1. Check [Issues](https://github.com/joaojpn/docklys-hosting/issues) to avoid duplicates.
 2. Open a new issue using the **Feature Request** template.
 3. Explain the problem you're solving, not just the solution.
 
