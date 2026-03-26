@@ -1,34 +1,61 @@
-# Security Policy
+# Contributing to Docklys
 
-## Reporting a Vulnerability
+Thank you for your interest in contributing!
 
-**Please do not open a public GitHub issue for security vulnerabilities.**
+## Reporting Bugs
 
-If you discover a security issue in Docklys, please report it by emailing:
+1. Check if the bug was already reported in [Issues](https://github.com/joaojpn/docklys/issues).
+2. If not, open a new issue using the **Bug Report** template.
+3. Be detailed — include steps to reproduce, expected behavior, and your environment.
 
-**support@docklys.io**
+## Suggesting Features
 
-Include as much detail as possible:
+1. Check [Issues](https://github.com/joaojpn/docklys/issues) to avoid duplicates.
+2. Open a new issue using the **Feature Request** template.
+3. Explain the problem you're solving, not just the solution.
 
-- A description of the vulnerability
-- Steps to reproduce
-- Potential impact
-- Suggested fix (if any)
+## Submitting Code
 
-You will receive a response within 7 days. We appreciate responsible disclosure and will credit you publicly unless you prefer to stay anonymous.
+1. Fork the repository.
+2. Create a branch from `main` following the naming convention below.
+3. Make your changes — small, focused PRs are easier to review.
+4. Open a Pull Request using the provided template.
 
-## Scope
+## Branch Naming
+```
+feat/short-description      # new feature
+fix/short-description       # bug fix
+docs/short-description      # documentation only
+chore/short-description     # maintenance, config, deps
+refactor/short-description  # code refactoring
+```
 
-**In scope:**
-- Authentication and authorization bypass
-- Remote code execution
-- Container escape or privilege escalation
-- Exposure of user data, tokens, or secrets
+## Commit Convention
 
-**Out of scope:**
-- Issues in third-party dependencies (report those upstream)
-- Self-hosted instances misconfigured by the operator
+We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-## Supported Versions
+| Type | When to use |
+|------|-------------|
+| `feat` | A new feature |
+| `fix` | A bug fix |
+| `docs` | Documentation changes only |
+| `refactor` | Code change that's not a fix or feature |
+| `chore` | Dependencies, config, build |
 
-Docklys is in early development. Only the latest version on `main` is actively supported.
+**Examples:**
+```
+feat(api): add GitHub OAuth login endpoint
+fix(web): correct memory input validation in deploy form
+chore(deps): bump fastify to 4.29
+```
+
+## Pull Request Process
+
+1. Make sure your branch is up to date with `main`.
+2. Ensure CI checks pass locally: `pnpm lint && pnpm build`
+3. Fill in all sections of the PR template.
+4. A maintainer will review and merge once approved.
+
+## Code of Conduct
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
