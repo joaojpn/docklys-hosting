@@ -1,8 +1,10 @@
 import Fastify from 'fastify'
+import { authRoutes } from './modules/auth/auth.controller'
+import 'dotenv/config'
 
-const app = Fastify({
-  logger: true,
-})
+const app = Fastify({ logger: true })
+
+app.register(authRoutes)
 
 app.get('/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() }
