@@ -1,8 +1,14 @@
 import Fastify from 'fastify'
+import cors from '@fastify/cors'
 import { authRoutes } from './modules/auth/auth.controller'
 import 'dotenv/config'
 
 const app = Fastify({ logger: true })
+
+app.register(cors, {
+  origin: 'http://localhost:5173',
+  credentials: true,
+})
 
 app.register(authRoutes)
 
