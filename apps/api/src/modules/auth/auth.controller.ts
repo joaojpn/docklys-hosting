@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { registerUser, validateUser } from './auth.service'
 import { registerSchema, loginSchema } from './auth.schema'
+import { getGithubAuthUrl, handleGithubCallback } from './github.service'
 import jwt from 'jsonwebtoken'
 
 export async function authRoutes(app: FastifyInstance) {
@@ -25,6 +26,23 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.status(200).send({ token, user })
     } catch (err: any) {
       return reply.status(401).send({ error: err.message })
+    }
+  })
+
+  app.get('/auth/github', async (request, reply) => {
+    const url = getGithubAuthUrl()
+    return reply.redirect(url)
+  })
+
+  app.get('/auth/github/callback', async (request, reply) => {
+    const { code } = request.query as any
+
+    try {
+      const { token, user } = await handleGithubCallback(code)
+      const frontendUrl = process.env.FRONTEND_URL!
+      return reply.redirect(`${frontendUrl}/auth/callback?token=${token}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}&id=${user.id}`)
+    } catch (err: any) {
+      return reply.redirect(`${process.env.FRONTEND_URL}/login?error=github_failed`)
     }
   })
 }
