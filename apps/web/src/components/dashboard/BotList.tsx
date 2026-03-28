@@ -58,19 +58,19 @@ export function BotList({ bots, loading, onNewBot }: Props) {
   if (bots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center mb-6">
+        <div className="w-16 h-16 rounded-2xl bg-zinc-900/80 border border-white/5 flex items-center justify-center mb-6">
           <Rocket className="w-7 h-7 text-zinc-600" />
         </div>
-        <h2 className="text-lg font-medium text-white mb-2">No applications yet</h2>
-        <p className="text-sm text-zinc-500 max-w-sm mb-2">
-          Your infrastructure is ready. Deploy your first application in seconds.
+        <h2 className="text-xl font-semibold text-white mb-2">No applications yet</h2>
+        <p className="text-sm text-zinc-500 max-w-xs mb-6">
+          Deploy your first bot in seconds — just zip your project and upload.
         </p>
-        <div className="bg-zinc-900 border border-white/5 rounded-lg px-4 py-3 text-left mb-8 text-xs text-zinc-400 font-mono">
-          <p className="text-zinc-500 mb-1"># Required zip structure:</p>
-          <p>your-bot/</p>
-          <p>├── main.py <span className="text-zinc-600"># or index.js</span></p>
-          <p>├── requirements.txt <span className="text-zinc-600"># or package.json</span></p>
-          <p>└── docklys.config</p>
+        <div className="bg-zinc-900/60 border border-white/5 rounded-xl px-5 py-4 text-left mb-8 font-mono text-xs space-y-0.5">
+          <p className="text-zinc-500 mb-2 font-sans">Required zip structure:</p>
+          <p className="text-zinc-400">your-bot/</p>
+          <p className="text-zinc-400">├── main.py <span className="text-zinc-600"># or index.js</span></p>
+          <p className="text-zinc-400">├── requirements.txt <span className="text-zinc-600"># or package.json</span></p>
+          <p className="text-zinc-400">└── docklys.config</p>
         </div>
         <button
           onClick={onNewBot}

@@ -58,7 +58,11 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans">
+    <div className="min-h-screen bg-[#050505] text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
+
+      {/* GRID BACKGROUND */}
+      <div className="fixed inset-0 bg-[linear-gradient(to_right,#ffffff06_1px,transparent_1px),linear-gradient(to_bottom,#ffffff06_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#050505]/95 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -87,7 +91,7 @@ export function Dashboard() {
 
       {/* CONTENT */}
       {view === 'list' && (
-        <main className="max-w-6xl mx-auto px-6 py-10">
+        <main className="relative max-w-6xl mx-auto px-6 py-10">
           <div className="flex items-start justify-between mb-8">
             <div>
               <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
