@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../../plugins/prisma'
 import { detectLanguage } from '../deploy/language-detector'
-import { buildAndRun, extractZip, removeContainer } from '../deploy/docker.service'
+import { buildAndRun, extractZip, removeContainer, getContainerStats } from '../deploy/docker.service'
 import path from 'path'
 import fs from 'fs'
 import { pipeline } from 'stream/promises'
@@ -14,6 +14,20 @@ function ensureDirs() {
   if (!fs.existsSync(EXTRACTED_DIR)) fs.mkdirSync(EXTRACTED_DIR, { recursive: true })
 }
 
+function detectLanguageFromCommand(startCommand: string): 'python' | 'node' | undefined {
+  if (startCommand.includes('python')) return 'python'
+  if (startCommand.includes('node')) return 'node'
+  return undefined
+}
+
+function getFieldValue(field: any): string | undefined {
+  if (!field) return undefined
+  if (typeof field === 'string') return field
+  if (field.value !== undefined) return field.value
+  if (Array.isArray(field)) return field[0]?.value ?? field[0]
+  return undefined
+}
+
 export async function botsRoutes(app: FastifyInstance) {
   app.get('/bots', async (request, reply) => {
     const userId = (request as any).userId
@@ -24,17 +38,30 @@ export async function botsRoutes(app: FastifyInstance) {
         orderBy: { createdAt: 'desc' },
       })
 
-      return reply.send({
-        bots: bots.map(bot => ({
-          id: bot.id,
-          name: bot.name,
-          description: bot.description,
-          memory: bot.memory,
-          status: bot.status,
-          startCommand: bot.startCommand,
-          createdAt: bot.createdAt,
-        })),
-      })
+      const botsWithStatus = await Promise.all(
+        bots.map(async (bot) => {
+          let status = bot.status
+          if (bot.containerId) {
+            try {
+              const stats = await getContainerStats(bot.containerId)
+              status = stats.status as any
+            } catch {}
+          }
+
+          return {
+            id: bot.id,
+            name: bot.name,
+            description: bot.description,
+            memory: bot.memory,
+            status,
+            startCommand: bot.startCommand,
+            language: detectLanguageFromCommand(bot.startCommand),
+            createdAt: bot.createdAt,
+          }
+        })
+      )
+
+      return reply.send({ bots: botsWithStatus })
     } catch (err: any) {
       return reply.status(500).send({ error: 'Failed to fetch applications.' })
     }
@@ -42,27 +69,34 @@ export async function botsRoutes(app: FastifyInstance) {
 
   app.post('/bots/deploy', async (request, reply) => {
     ensureDirs()
-
     const userId = (request as any).userId
 
-    const data = await request.file()
-    if (!data) return reply.status(400).send({ error: 'No file uploaded.' })
+    const parts = request.parts()
+    let fileData: any = null
+    const fields: Record<string, string> = {}
 
-    const name = data.fields.name as any
-    const description = data.fields.description as any
-    const memory = data.fields.memory as any
-    const autoRestart = data.fields.autoRestart as any
+    for await (const part of parts) {
+      if (part.type === 'file') {
+        fileData = part
+        const botId = crypto.randomUUID()
+        const zipPath = path.join(UPLOADS_DIR, `${botId}.zip`)
+        await pipeline(part.file, fs.createWriteStream(zipPath))
+        fileData.savedPath = zipPath
+        fileData.botId = botId
+      } else {
+        fields[part.fieldname] = (part as any).value
+      }
+    }
 
-    if (!name?.value) return reply.status(400).send({ error: 'Application name is required.' })
-    if (!data.filename.endsWith('.zip')) return reply.status(400).send({ error: 'Only .zip files are accepted.' })
+    if (!fileData) return reply.status(400).send({ error: 'No file uploaded.' })
+    if (!fields.name?.trim()) return reply.status(400).send({ error: 'Application name is required.' })
+    if (!fileData.filename.endsWith('.zip')) return reply.status(400).send({ error: 'Only .zip files are accepted.' })
 
-    const botId = crypto.randomUUID()
-    const zipPath = path.join(UPLOADS_DIR, `${botId}.zip`)
+    const botId = fileData.botId
+    const zipPath = fileData.savedPath
     const extractPath = path.join(EXTRACTED_DIR, botId)
 
     try {
-      await pipeline(data.file, fs.createWriteStream(zipPath))
-
       const { language, startCommand } = detectLanguage(zipPath)
 
       await extractZip(zipPath, extractPath)
@@ -71,17 +105,17 @@ export async function botsRoutes(app: FastifyInstance) {
         botId,
         language,
         startCommand,
-        memory: parseInt(memory?.value || '256'),
-        autoRestart: autoRestart?.value !== 'false',
+        memory: parseInt(fields.memory || '256'),
+        autoRestart: fields.autoRestart !== 'false',
         extractedPath: extractPath,
       })
 
       const bot = await prisma.bot.create({
         data: {
           id: botId,
-          name: name.value,
-          description: description?.value || null,
-          memory: parseInt(memory?.value || '256'),
+          name: fields.name.trim(),
+          description: fields.description?.trim() || null,
+          memory: parseInt(fields.memory || '256'),
           startCommand,
           status: 'RUNNING',
           containerId,
@@ -106,6 +140,48 @@ export async function botsRoutes(app: FastifyInstance) {
     }
   })
 
+  app.post('/bots/:id/stop', async (request, reply) => {
+    const { id } = request.params as any
+    const userId = (request as any).userId
+
+    try {
+      const bot = await prisma.bot.findFirst({ where: { id, userId } })
+      if (!bot) return reply.status(404).send({ error: 'Application not found.' })
+      if (!bot.containerId) return reply.status(400).send({ error: 'No container found.' })
+
+      const Dockerode = (await import('dockerode')).default
+      const docker = new Dockerode()
+      await docker.getContainer(bot.containerId).stop()
+
+      await prisma.bot.update({ where: { id }, data: { status: 'STOPPED' } })
+
+      return reply.send({ success: true })
+    } catch (err: any) {
+      return reply.status(500).send({ error: 'Failed to stop application.' })
+    }
+  })
+
+  app.post('/bots/:id/restart', async (request, reply) => {
+    const { id } = request.params as any
+    const userId = (request as any).userId
+
+    try {
+      const bot = await prisma.bot.findFirst({ where: { id, userId } })
+      if (!bot) return reply.status(404).send({ error: 'Application not found.' })
+      if (!bot.containerId) return reply.status(400).send({ error: 'No container found.' })
+
+      const Dockerode = (await import('dockerode')).default
+      const docker = new Dockerode()
+      await docker.getContainer(bot.containerId).restart()
+
+      await prisma.bot.update({ where: { id }, data: { status: 'RUNNING' } })
+
+      return reply.send({ success: true })
+    } catch (err: any) {
+      return reply.status(500).send({ error: 'Failed to restart application.' })
+    }
+  })
+
   app.delete('/bots/:id', async (request, reply) => {
     const { id } = request.params as any
     const userId = (request as any).userId
@@ -115,6 +191,10 @@ export async function botsRoutes(app: FastifyInstance) {
       if (!bot) return reply.status(404).send({ error: 'Application not found.' })
 
       if (bot.containerId) await removeContainer(bot.containerId)
+
+      if (bot.zipPath) fs.rmSync(bot.zipPath, { force: true })
+      const extractPath = path.join(EXTRACTED_DIR, bot.id)
+      fs.rmSync(extractPath, { recursive: true, force: true })
 
       await prisma.bot.delete({ where: { id } })
 

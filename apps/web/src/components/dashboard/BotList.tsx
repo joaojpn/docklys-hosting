@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Bot } from '../../pages/Dashboard'
-import { Loader2, Plus, Rocket } from 'lucide-react'
+import { Loader2, Plus, Rocket, Square, RotateCcw, Trash2 } from 'lucide-react'
+import { api } from '../../services/api'
 
 const PythonIcon = () => (
   <div className="w-8 h-8 rounded-md bg-[#3776AB]/20 border border-[#3776AB]/30 flex items-center justify-center">
@@ -44,9 +46,50 @@ type Props = {
   bots: Bot[]
   loading: boolean
   onNewBot: () => void
+  onRefresh: () => void
 }
 
-export function BotList({ bots, loading, onNewBot }: Props) {
+export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+
+  const handleStop = async (id: string) => {
+    setActionLoading(id + '-stop')
+    try {
+      await api.post(`/bots/${id}/stop`)
+      onRefresh()
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to stop.')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleRestart = async (id: string) => {
+    setActionLoading(id + '-restart')
+    try {
+      await api.post(`/bots/${id}/restart`)
+      onRefresh()
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to restart.')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    setActionLoading(id + '-delete')
+    try {
+      await api.delete(`/bots/${id}`)
+      setConfirmDelete(null)
+      onRefresh()
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to delete.')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
@@ -70,7 +113,7 @@ export function BotList({ bots, loading, onNewBot }: Props) {
           <p className="text-zinc-400">your-bot/</p>
           <p className="text-zinc-400">├── main.py <span className="text-zinc-600"># or index.js</span></p>
           <p className="text-zinc-400">├── requirements.txt <span className="text-zinc-600"># or package.json</span></p>
-          <p className="text-zinc-400">└── docklys.config</p>
+          <p className="text-zinc-400">└── docklys.config <span className="text-zinc-600"># optional</span></p>
         </div>
         <button
           onClick={onNewBot}
@@ -87,57 +130,115 @@ export function BotList({ bots, loading, onNewBot }: Props) {
   const stopped = bots.filter(b => b.status !== 'RUNNING').length
 
   return (
-    <div className="border border-white/5 rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-blue-500" />
-          <span className="text-sm font-medium">My Applications</span>
+    <>
+      <div className="border border-white/5 rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <span className="text-sm font-medium">My Applications</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-green-400">{running} Running</span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-zinc-400">{stopped} Stopped</span>
+          </div>
         </div>
-        <div className="flex items-center gap-3 text-xs">
-          <span className="text-green-400">{running} Running</span>
-          <span className="text-zinc-600">•</span>
-          <span className="text-zinc-400">{stopped} Stopped</span>
-        </div>
+
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-white/5">
+              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">NO</th>
+              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">APPLICATION</th>
+              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">CREATED</th>
+              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">MEMORY</th>
+              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">STATUS</th>
+              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bots.map((bot, index) => (
+              <tr key={bot.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                <td className="px-6 py-4 text-xs text-zinc-600">
+                  {String(index + 1).padStart(2, '0')}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    {bot.language === 'python' ? <PythonIcon /> : bot.language === 'node' ? <NodeIcon /> : <UnknownIcon />}
+                    <div>
+                      <p className="text-sm font-medium text-white">{bot.name}</p>
+                      {bot.description && <p className="text-xs text-zinc-500 mt-0.5">{bot.description}</p>}
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-zinc-400">
+                  {new Date(bot.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </td>
+                <td className="px-6 py-4 text-sm text-zinc-400">{bot.memory} MB</td>
+                <td className="px-6 py-4">
+                  <StatusBadge status={bot.status} />
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-1">
+                    {bot.status === 'RUNNING' && (
+                      <button
+                        onClick={() => handleStop(bot.id)}
+                        disabled={!!actionLoading}
+                        title="Stop"
+                        className="p-1.5 text-zinc-500 hover:text-yellow-400 hover:bg-yellow-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        {actionLoading === bot.id + '-stop' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleRestart(bot.id)}
+                      disabled={!!actionLoading}
+                      title="Restart"
+                      className="p-1.5 text-zinc-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {actionLoading === bot.id + '-restart' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(bot.id)}
+                      disabled={!!actionLoading}
+                      title="Delete"
+                      className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-white/5">
-            <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">NO</th>
-            <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">APPLICATION</th>
-            <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">UPTIME</th>
-            <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">CREATED</th>
-            <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">MEMORY</th>
-            <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">STATUS</th>
-          </tr>
-        </thead>
-        <tbody>
-          {bots.map((bot, index) => (
-            <tr key={bot.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-              <td className="px-6 py-4 text-xs text-zinc-600">
-                {String(index + 1).padStart(2, '0')}
-              </td>
-              <td className="px-6 py-4">
-                <div className="flex items-center gap-3">
-                  {bot.language === 'python' ? <PythonIcon /> : bot.language === 'node' ? <NodeIcon /> : <UnknownIcon />}
-                  <div>
-                    <p className="text-sm font-medium text-white">{bot.name}</p>
-                    {bot.description && <p className="text-xs text-zinc-500 mt-0.5">{bot.description}</p>}
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-4 text-sm text-zinc-400">{bot.uptime || '—'}</td>
-              <td className="px-6 py-4 text-sm text-zinc-400">
-                {new Date(bot.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
-              </td>
-              <td className="px-6 py-4 text-sm text-zinc-400">{bot.memory} MB</td>
-              <td className="px-6 py-4">
-                <StatusBadge status={bot.status} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+      {/* Delete confirmation modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4">
+            <h2 className="text-base font-semibold text-white mb-2">Delete application?</h2>
+            <p className="text-sm text-zinc-400 mb-6">
+              This will stop the container and remove all data. This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 h-10 text-sm text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 rounded-lg transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDelete)}
+                disabled={!!actionLoading}
+                className="flex-1 h-10 text-sm font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg transition-all cursor-pointer disabled:opacity-50"
+              >
+                {actionLoading === confirmDelete + '-delete' ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
