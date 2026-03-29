@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Bot } from '../../pages/Dashboard'
-import { Loader2, Plus, Rocket, Square, RotateCcw, Trash2 } from 'lucide-react'
+import { Loader2, Plus, Rocket, Square, RotateCcw, Trash2, ScrollText } from 'lucide-react'
 import { api } from '../../services/api'
+import { BotLogs } from './BotLogs'
 
 const PythonIcon = () => (
   <div className="w-8 h-8 rounded-md bg-[#3776AB]/20 border border-[#3776AB]/30 flex items-center justify-center">
@@ -52,6 +53,7 @@ type Props = {
 export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [logsBot, setLogsBot] = useState<{ id: string; name: string } | null>(null)
 
   const handleStop = async (id: string) => {
     setActionLoading(id + '-stop')
@@ -179,6 +181,13 @@ export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setLogsBot({ id: bot.id, name: bot.name })}
+                      title="Logs"
+                      className="p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-white/5 rounded-md transition-all cursor-pointer"
+                    >
+                      <ScrollText className="w-3.5 h-3.5" />
+                    </button>
                     {bot.status === 'RUNNING' && (
                       <button
                         onClick={() => handleStop(bot.id)}
@@ -213,7 +222,14 @@ export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
         </table>
       </div>
 
-      {/* Delete confirmation modal */}
+      {logsBot && (
+        <BotLogs
+          botId={logsBot.id}
+          botName={logsBot.name}
+          onClose={() => setLogsBot(null)}
+        />
+      )}
+
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4">

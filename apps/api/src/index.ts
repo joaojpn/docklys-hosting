@@ -3,6 +3,7 @@ import cors from '@fastify/cors'
 import multipart from '@fastify/multipart'
 import { authRoutes } from './modules/auth/auth.controller'
 import { botsRoutes } from './modules/bots/bots.controller'
+import { logsRoutes } from './modules/bots/logs.controller'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
 
@@ -34,6 +35,7 @@ async function authenticate(request: any, reply: any) {
 }
 
 app.register(authRoutes)
+app.register(logsRoutes)
 
 app.register(async (instance) => {
   instance.addHook('preHandler', authenticate)
