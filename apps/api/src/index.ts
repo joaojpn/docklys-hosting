@@ -4,6 +4,7 @@ import multipart from '@fastify/multipart'
 import { authRoutes } from './modules/auth/auth.controller'
 import { botsRoutes } from './modules/bots/bots.controller'
 import { logsRoutes } from './modules/bots/logs.controller'
+import { statsRoutes } from './modules/bots/stats.controller'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
 
@@ -40,6 +41,7 @@ app.register(logsRoutes)
 app.register(async (instance) => {
   instance.addHook('preHandler', authenticate)
   instance.register(botsRoutes)
+  instance.register(statsRoutes)
 })
 
 app.get('/health', async () => {

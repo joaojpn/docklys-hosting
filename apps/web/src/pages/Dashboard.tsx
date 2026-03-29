@@ -5,6 +5,7 @@ import { LogOut, RefreshCw, Plus } from 'lucide-react'
 import { BotList } from '../components/dashboard/BotList'
 import { DeployBot } from '../components/dashboard/DeployBot'
 import { SuccessModal } from '../components/dashboard/SuccessModal'
+import { BotDetails } from './BotDetails'
 
 export type Bot = {
   id: string
@@ -27,10 +28,11 @@ export type DeployedBot = {
 
 export function Dashboard() {
   const { user, signOut } = useAuth()
-  const [view, setView] = useState<'list' | 'deploy'>('list')
+  const [view, setView] = useState<'list' | 'deploy' | 'details'>('list')
   const [bots, setBots] = useState<Bot[]>([])
   const [loading, setLoading] = useState(true)
   const [successData, setSuccessData] = useState<DeployedBot | null>(null)
+  const [selectedBot, setSelectedBot] = useState<Bot | null>(null)
 
   const fetchBots = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -58,6 +60,11 @@ export function Dashboard() {
     setSuccessData(bot)
     setView('list')
     fetchBots()
+  }
+
+  const handleSelectBot = (bot: Bot) => {
+    setSelectedBot(bot)
+    setView('details')
   }
 
   return (
@@ -106,13 +113,26 @@ export function Dashboard() {
               </button>
             </div>
           </div>
-
-          <BotList bots={bots} loading={loading} onNewBot={() => setView('deploy')} onRefresh={() => fetchBots()} />
+          <BotList
+            bots={bots}
+            loading={loading}
+            onNewBot={() => setView('deploy')}
+            onRefresh={() => fetchBots()}
+            onSelectBot={handleSelectBot}
+          />
         </main>
       )}
 
       {view === 'deploy' && (
         <DeployBot onBack={() => setView('list')} onSuccess={handleDeploySuccess} />
+      )}
+
+      {view === 'details' && selectedBot && (
+        <BotDetails
+          bot={selectedBot}
+          onBack={() => { setView('list'); fetchBots() }}
+          onDelete={() => { setView('list'); fetchBots() }}
+        />
       )}
 
       {successData && (
