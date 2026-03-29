@@ -15,9 +15,6 @@ export type Bot = {
   language?: 'python' | 'node'
   startCommand: string
   createdAt: string
-  uptime?: string
-  cpu?: string
-  ram?: string
 }
 
 export type DeployedBot = {
@@ -115,7 +112,12 @@ export function Dashboard() {
             </div>
           </div>
 
-          <BotList bots={bots} loading={loading} onNewBot={() => setView('deploy')} />
+          <BotList
+            bots={bots}
+            loading={loading}
+            onNewBot={() => setView('deploy')}
+            onRefresh={fetchBots}
+          />
         </main>
       )}
 
