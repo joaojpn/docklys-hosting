@@ -48,14 +48,16 @@ type Props = {
   loading: boolean
   onNewBot: () => void
   onRefresh: () => void
+  onSelectBot: (bot: Bot) => void
 }
 
-export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
+export function BotList({ bots, loading, onNewBot, onRefresh, onSelectBot }: Props) {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [logsBot, setLogsBot] = useState<{ id: string; name: string } | null>(null)
 
-  const handleStop = async (id: string) => {
+  const handleStop = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
     setActionLoading(id + '-stop')
     try {
       await api.post(`/bots/${id}/stop`)
@@ -67,7 +69,8 @@ export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
     }
   }
 
-  const handleRestart = async (id: string) => {
+  const handleRestart = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
     setActionLoading(id + '-restart')
     try {
       await api.post(`/bots/${id}/restart`)
@@ -159,7 +162,11 @@ export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
           </thead>
           <tbody>
             {bots.map((bot, index) => (
-              <tr key={bot.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+              <tr
+                key={bot.id}
+                onClick={() => onSelectBot(bot)}
+                className="border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer"
+              >
                 <td className="px-6 py-4 text-xs text-zinc-600">
                   {String(index + 1).padStart(2, '0')}
                 </td>
@@ -179,10 +186,10 @@ export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
                 <td className="px-6 py-4">
                   <StatusBadge status={bot.status} />
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => setLogsBot({ id: bot.id, name: bot.name })}
+                      onClick={e => { e.stopPropagation(); setLogsBot({ id: bot.id, name: bot.name }) }}
                       title="Logs"
                       className="p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-white/5 rounded-md transition-all cursor-pointer"
                     >
@@ -190,7 +197,7 @@ export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
                     </button>
                     {bot.status === 'RUNNING' && (
                       <button
-                        onClick={() => handleStop(bot.id)}
+                        onClick={e => handleStop(e, bot.id)}
                         disabled={!!actionLoading}
                         title="Stop"
                         className="p-1.5 text-zinc-500 hover:text-yellow-400 hover:bg-yellow-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
@@ -199,7 +206,7 @@ export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
                       </button>
                     )}
                     <button
-                      onClick={() => handleRestart(bot.id)}
+                      onClick={e => { e.stopPropagation(); setActionLoading(bot.id + '-restart'); api.post(`/bots/${bot.id}/restart`).then(() => onRefresh()).finally(() => setActionLoading(null)) }}
                       disabled={!!actionLoading}
                       title="Restart"
                       className="p-1.5 text-zinc-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
@@ -207,7 +214,7 @@ export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
                       {actionLoading === bot.id + '-restart' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                     </button>
                     <button
-                      onClick={() => setConfirmDelete(bot.id)}
+                      onClick={e => { e.stopPropagation(); setConfirmDelete(bot.id) }}
                       disabled={!!actionLoading}
                       title="Delete"
                       className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
@@ -223,11 +230,7 @@ export function BotList({ bots, loading, onNewBot, onRefresh }: Props) {
       </div>
 
       {logsBot && (
-        <BotLogs
-          botId={logsBot.id}
-          botName={logsBot.name}
-          onClose={() => setLogsBot(null)}
-        />
+        <BotLogs botId={logsBot.id} botName={logsBot.name} onClose={() => setLogsBot(null)} />
       )}
 
       {confirmDelete && (
