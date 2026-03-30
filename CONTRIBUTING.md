@@ -59,3 +59,7 @@ chore(deps): bump fastify to 4.29
 ## Code of Conduct
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
+
+## Questions?
+
+If you have questions or need help getting started, join our [Discord community](https://discord.gg/ke5V4NeQ49).
