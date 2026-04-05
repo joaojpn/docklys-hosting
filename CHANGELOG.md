@@ -1,3 +1,13 @@
+## [0.3.0] - 2026-04-05
+
+### Added
+- One-command install script for Ubuntu/Debian servers (`install.sh`)
+- Production Docker Compose file (`docker-compose.production.yml`)
+- Nginx configuration example with SSL and SSE support (`docs/nginx.conf.example`)
+
+### Fixed
+- Navbar name not updating after profile edit
+
 ## [0.2.0] - 2026-04-05
 
 ### Added
