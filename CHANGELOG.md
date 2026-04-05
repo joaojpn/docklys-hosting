@@ -1,3 +1,11 @@
+## [0.2.0] - 2026-04-05
+
+### Added
+- Profile page with name editor and member since date
+- Change password for email/password accounts  
+- GitHub connection status on profile page
+- Delete account with confirmation modal
+  
 ## [0.1.0] - 2026-03-29
 
 ### Added
