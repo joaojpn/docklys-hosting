@@ -3,6 +3,7 @@ import { Bot } from './Dashboard'
 import { api } from '../services/api'
 import { ArrowLeft, Square, RotateCcw, Trash2, Loader2, Terminal, Cpu, MemoryStick, Clock } from 'lucide-react'
 import { BotLogs } from '../components/dashboard/BotLogs'
+import { EnvVars } from '../components/dashboard/EnvVars'
 
 type Props = {
   bot: Bot
@@ -15,7 +16,6 @@ type Stats = {
   uptime: string
   cpu: string
   ram: string
-  ramLimit: string
 }
 
 const PythonIcon = () => (
@@ -112,7 +112,6 @@ export function BotDetails({ bot, onBack, onDelete }: Props) {
   return (
     <main className="relative max-w-4xl mx-auto px-6 py-10">
 
-      {/* Back */}
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors cursor-pointer mb-8"
@@ -121,7 +120,6 @@ export function BotDetails({ bot, onBack, onDelete }: Props) {
         Back to Dashboard
       </button>
 
-      {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-4">
           {bot.language === 'python' ? <PythonIcon /> : <NodeIcon />}
@@ -171,8 +169,7 @@ export function BotDetails({ bot, onBack, onDelete }: Props) {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-4">
           <div className="flex items-center gap-2 text-zinc-500 text-xs mb-2">
             <Cpu className="w-3.5 h-3.5" />
@@ -204,39 +201,43 @@ export function BotDetails({ bot, onBack, onDelete }: Props) {
         </div>
       </div>
 
-      {/* Info */}
-      <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-5 space-y-4">
-        <h2 className="text-sm font-medium text-white">Application Info</h2>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-zinc-500 text-xs mb-1">Application ID</p>
-            <p className="text-zinc-300 font-mono text-xs">{bot.id}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-5">
+          <h2 className="text-sm font-medium text-white mb-4">Application info</h2>
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="text-zinc-500 text-xs mb-1">Application ID</p>
+              <p className="text-zinc-300 font-mono text-xs">{bot.id}</p>
+            </div>
+            <div>
+              <p className="text-zinc-500 text-xs mb-1">Start command</p>
+              <p className="text-zinc-300 font-mono text-xs">{bot.startCommand}</p>
+            </div>
+            <div>
+              <p className="text-zinc-500 text-xs mb-1">Created</p>
+              <p className="text-zinc-300 text-xs">
+                {new Date(bot.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </p>
+            </div>
+            <div>
+              <p className="text-zinc-500 text-xs mb-1">Memory limit</p>
+              <p className="text-zinc-300 text-xs">{bot.memory} MB</p>
+            </div>
           </div>
-          <div>
-            <p className="text-zinc-500 text-xs mb-1">Start Command</p>
-            <p className="text-zinc-300 font-mono text-xs">{bot.startCommand}</p>
-          </div>
-          <div>
-            <p className="text-zinc-500 text-xs mb-1">Created</p>
-            <p className="text-zinc-300 text-xs">
-              {new Date(bot.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
-            </p>
-          </div>
-          <div>
-            <p className="text-zinc-500 text-xs mb-1">Memory Limit</p>
-            <p className="text-zinc-300 text-xs">{bot.memory} MB</p>
-          </div>
+        </div>
+
+        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-5">
+          <h2 className="text-sm font-medium text-white mb-4">Environment variables</h2>
+          <EnvVars botId={bot.id} />
         </div>
       </div>
 
-      {/* Logs Modal */}
       {showLogs && (
         <BotLogs botId={bot.id} botName={bot.name} onClose={() => setShowLogs(false)} />
       )}
 
-      {/* Delete Modal */}
       {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4">
             <h2 className="text-base font-semibold text-white mb-2">Delete application?</h2>
             <p className="text-sm text-zinc-400 mb-6">

@@ -16,11 +16,6 @@ const INSTALL_COMMANDS: Record<Language, string> = {
   node: 'npm install --quiet 2>/dev/null || true',
 }
 
-const START_PREFIXES: Record<Language, string> = {
-  python: 'python -u',
-  node: 'node',
-}
-
 export async function extractZip(zipPath: string, destDir: string): Promise<void> {
   const zip = new AdmZip(zipPath)
   const entries = zip.getEntries()
@@ -53,12 +48,12 @@ export async function buildAndRun(opts: {
   memory: number
   autoRestart: boolean
   extractedPath: string
+  envVars?: Record<string, string>
 }): Promise<string> {
-  const { botId, language, startCommand, memory, autoRestart, extractedPath } = opts
+  const { botId, language, startCommand, memory, autoRestart, extractedPath, envVars = {} } = opts
 
   const image = BASE_IMAGES[language]
   const installCmd = INSTALL_COMMANDS[language]
-  const prefix = START_PREFIXES[language]
 
   const baseCmd = startCommand.startsWith('python ')
     ? startCommand.replace('python ', 'python -u ')
@@ -66,11 +61,14 @@ export async function buildAndRun(opts: {
 
   await pullImageIfNeeded(image)
 
+  const envArray = Object.entries(envVars).map(([k, v]) => `${k}=${v}`)
+
   const container = await docker.createContainer({
     name: `docklys-${botId}`,
     Image: image,
     Cmd: ['sh', '-c', `${installCmd} && ${baseCmd}`],
     WorkingDir: '/app',
+    Env: envArray,
     HostConfig: {
       Binds: [`${extractedPath}:/app`],
       Memory: memory * 1024 * 1024,
@@ -121,4 +119,25 @@ export async function getContainerStats(containerId: string) {
     status: info.State.Running ? 'RUNNING' : 'STOPPED',
     uptime: info.State.StartedAt,
   }
+}
+
+export async function restartWithEnv(containerId: string, envVars: Record<string, string>): Promise<void> {
+  const container = docker.getContainer(containerId)
+  const info = await container.inspect()
+
+  const envArray = Object.entries(envVars).map(([k, v]) => `${k}=${v}`)
+
+  await container.stop()
+  await container.remove()
+
+  const newContainer = await docker.createContainer({
+    name: info.Name.replace('/', ''),
+    Image: info.Config.Image,
+    Cmd: info.Config.Cmd || [],
+    WorkingDir: info.Config.WorkingDir,
+    Env: envArray,
+    HostConfig: info.HostConfig,
+  })
+
+  await newContainer.start()
 }

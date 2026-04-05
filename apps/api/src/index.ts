@@ -5,6 +5,7 @@ import { authRoutes } from './modules/auth/auth.controller'
 import { botsRoutes } from './modules/bots/bots.controller'
 import { logsRoutes } from './modules/bots/logs.controller'
 import { statsRoutes } from './modules/bots/stats.controller'
+import { envVarsRoutes } from './modules/bots/envvars.controller'
 import { profileRoutes } from './modules/profile/profile.controller'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
@@ -43,6 +44,7 @@ app.register(async (instance) => {
   instance.addHook('preHandler', authenticate)
   instance.register(botsRoutes)
   instance.register(statsRoutes)
+  instance.register(envVarsRoutes)
   instance.register(profileRoutes)
 })
 
