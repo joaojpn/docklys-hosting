@@ -13,6 +13,7 @@ interface AuthContextData {
   signIn: (data: { email: string; password: string }) => Promise<void>
   signInWithGithub: () => void
   signOut: () => void
+  updateUser: (data: Partial<User>) => void
   loading: boolean
 }
 
@@ -44,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   function signInWithGithub() {
-    window.location.href = 'http://localhost:3333/auth/github'
+    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3333'}/auth/github`
   }
 
   function signOut() {
@@ -54,8 +55,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null)
   }
 
+  function updateUser(data: Partial<User>) {
+    if (!user) return
+    const updated = { ...user, ...data }
+    setUser(updated)
+    localStorage.setItem('@Docklys:user', JSON.stringify(updated))
+  }
+
   return (
-    <AuthContext.Provider value={{ signed: !!user, user, signIn, signInWithGithub, signOut, loading }}>
+    <AuthContext.Provider value={{ signed: !!user, user, signIn, signInWithGithub, signOut, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   )

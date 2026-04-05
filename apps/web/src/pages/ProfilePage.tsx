@@ -18,7 +18,7 @@ type Props = {
 }
 
 export function ProfilePage({ onBack }: Props) {
-  const { signOut } = useAuth()
+  const { signOut, updateUser } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -49,7 +49,7 @@ export function ProfilePage({ onBack }: Props) {
     setNameSuccess(false)
     try {
       await api.patch('/profile', { name })
-      setNameSuccess(true)
+      setNameSuccess(true); updateUser({ name })
       setTimeout(() => setNameSuccess(false), 3000)
     } catch (err: any) {
       setNameError(err.response?.data?.error || 'Failed to update name.')
