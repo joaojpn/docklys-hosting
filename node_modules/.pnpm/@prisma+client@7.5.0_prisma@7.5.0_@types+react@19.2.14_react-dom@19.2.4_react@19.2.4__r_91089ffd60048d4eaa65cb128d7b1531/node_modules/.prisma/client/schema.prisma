@@ -28,6 +28,7 @@ model Bot {
   status       BotStatus @default(STOPPED)
   containerId  String?
   zipPath      String?
+  envVars      EnvVar[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -40,4 +41,15 @@ enum BotStatus {
   STOPPED
   ERROR
   DEPLOYING
+}
+
+model EnvVar {
+  id        String   @id @default(uuid())
+  key       String
+  value     String
+  botId     String
+  bot       Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([botId, key])
 }
