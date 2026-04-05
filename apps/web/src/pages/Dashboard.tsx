@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
-import { LogOut, RefreshCw, Plus } from 'lucide-react'
+import { LogOut, RefreshCw, Plus, User } from 'lucide-react'
 import { BotList } from '../components/dashboard/BotList'
 import { DeployBot } from '../components/dashboard/DeployBot'
 import { SuccessModal } from '../components/dashboard/SuccessModal'
 import { BotDetails } from './BotDetails'
+import { ProfilePage } from './ProfilePage'
 
 export type Bot = {
   id: string
@@ -28,7 +29,7 @@ export type DeployedBot = {
 
 export function Dashboard() {
   const { user, signOut } = useAuth()
-  const [view, setView] = useState<'list' | 'deploy' | 'details'>('list')
+  const [view, setView] = useState<'list' | 'deploy' | 'details' | 'profile'>('list')
   const [bots, setBots] = useState<Bot[]>([])
   const [loading, setLoading] = useState(true)
   const [successData, setSuccessData] = useState<DeployedBot | null>(null)
@@ -78,9 +79,15 @@ export function Dashboard() {
             <span className="text-lg font-semibold tracking-tight">Docklys</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-zinc-400">
-              Hello, <span className="text-white">{user?.name?.split(' ')[0]}</span>
-            </span>
+            <button
+              onClick={() => setView('profile')}
+              className={`flex items-center gap-2 text-sm transition-colors cursor-pointer ${view === 'profile' ? 'text-white' : 'text-zinc-400 hover:text-white'}`}
+            >
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-700 to-blue-500 flex items-center justify-center text-[10px] font-bold text-white">
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
+              <span className="hidden md:inline">{user?.name?.split(' ')[0]}</span>
+            </button>
             <div className="h-4 w-px bg-white/10" />
             <button onClick={signOut} className="text-zinc-400 hover:text-red-400 transition-colors cursor-pointer" title="Sign out">
               <LogOut className="w-4 h-4" />
@@ -133,6 +140,10 @@ export function Dashboard() {
           onBack={() => { setView('list'); fetchBots() }}
           onDelete={() => { setView('list'); fetchBots() }}
         />
+      )}
+
+      {view === 'profile' && (
+        <ProfilePage onBack={() => setView('list')} />
       )}
 
       {successData && (

@@ -5,6 +5,7 @@ import { authRoutes } from './modules/auth/auth.controller'
 import { botsRoutes } from './modules/bots/bots.controller'
 import { logsRoutes } from './modules/bots/logs.controller'
 import { statsRoutes } from './modules/bots/stats.controller'
+import { profileRoutes } from './modules/profile/profile.controller'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
 
@@ -12,7 +13,7 @@ const app = Fastify({ logger: true })
 
 app.register(cors, {
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://172.28.115.4:5173'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 })
@@ -42,6 +43,7 @@ app.register(async (instance) => {
   instance.addHook('preHandler', authenticate)
   instance.register(botsRoutes)
   instance.register(statsRoutes)
+  instance.register(profileRoutes)
 })
 
 app.get('/health', async () => {
