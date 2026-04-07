@@ -5,7 +5,6 @@
     <a href="https://github.com/joaojpn/docklys-hosting/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-red.svg" alt="License MIT" /></a>
     <a href="https://github.com/joaojpn/docklys-hosting/actions/workflows/ci.yml"></a>
     <img src="https://img.shields.io/badge/version-0.3.0-blue" alt="Version" />
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" />
   </p>
 
   <p>
