@@ -1,4 +1,3 @@
-<div align="center">
   <img src="docs/assets/logo.png" alt="Docklys" width="260" />
   <p><strong>Deploy Discord, Telegram, and WhatsApp bots in seconds.<br/>No infrastructure knowledge required.</strong></p>
 
@@ -15,7 +14,6 @@
     <a href="#-getting-started">Getting Started</a> ·
     <a href="CONTRIBUTING.md">Contributing</a>
   </p>
-</div>
 
 ---
 
