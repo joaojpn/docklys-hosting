@@ -12,6 +12,7 @@ import { PageTransition } from '../components/PageTransition'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { useAuth } from '../contexts/AuthContext'
+import { OnboardingDialog } from '../components/OnboardingDialog'
 
 export type Bot = {
   id: string
@@ -40,6 +41,12 @@ export function Dashboard() {
   const [successData, setSuccessData] = useState<DeployedBot | null>(null)
   const [selectedBot, setSelectedBot] = useState<Bot | null>(null)
   const [search, setSearch] = useState('')
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('@Docklys:onboarded'))
+
+  const handleCloseOnboarding = () => {
+    localStorage.setItem('@Docklys:onboarded', 'true')
+    setShowOnboarding(false)
+  }
 
   const fetchBots = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -186,6 +193,8 @@ export function Dashboard() {
           </PageTransition>
         )}
       </AnimatePresence>
+
+      {showOnboarding && <OnboardingDialog onClose={handleCloseOnboarding} />}
 
       {successData && (
         <SuccessModal
