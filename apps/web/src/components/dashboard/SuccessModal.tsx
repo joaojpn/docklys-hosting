@@ -1,5 +1,7 @@
-import { X, CheckCircle } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { CheckCircle, X, Rocket } from 'lucide-react'
 import { DeployedBot } from '../../pages/Dashboard'
+import { Button } from '../ui/button'
 
 type Props = {
   data: DeployedBot
@@ -9,63 +11,77 @@ type Props = {
 
 export function SuccessModal({ data, onClose, onDeploy }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8 w-full max-w-md mx-4">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green-400" />
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+        onClick={e => e.stopPropagation()}
+        className="bg-card border border-border/50 rounded-2xl w-full max-w-lg mx-4 overflow-hidden"
+      >
+        {/* Header */}
+        <div className="p-6 pb-5">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-emerald-400" />
+              </div>
+              <h2 className="text-[20px] font-bold tracking-tight" style={{ fontFamily: 'Geist, sans-serif' }}>
+                Application uploaded successfully
+              </h2>
+            </div>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer mt-1 ml-4 shrink-0">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-[13px] text-muted-foreground">
+            Your application <span className="text-foreground font-semibold">{data.name}</span> has been successfully submitted.
+          </p>
+        </div>
+
+        {/* Info grid */}
+        <div className="px-6 pb-6">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Application name</p>
+              <p className="text-[15px] font-semibold">{data.name}</p>
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white">Application deployed</h2>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                <span className="text-white font-medium">{data.name}</span> is now running
-              </p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Application ID</p>
+              <p className="text-[12px] font-mono text-muted-foreground truncate">{data.id}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Language</p>
+              <p className="text-[15px] font-semibold">{data.language === 'python' ? 'Python' : 'Node.js'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Memory</p>
+              <p className="text-[15px] font-semibold">{data.memory} MB</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Start command</p>
+              <p className="text-[13px] font-mono">{data.startCommand}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors cursor-pointer">
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-zinc-800/50 rounded-lg p-3">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Application Name</p>
-            <p className="text-sm text-white font-medium">{data.name}</p>
-          </div>
-          <div className="bg-zinc-800/50 rounded-lg p-3">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Application ID</p>
-            <p className="text-xs text-zinc-300 font-mono truncate">{data.id}</p>
-          </div>
-          <div className="bg-zinc-800/50 rounded-lg p-3">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Language</p>
-            <p className="text-sm text-white font-medium capitalize">{data.language}</p>
-          </div>
-          <div className="bg-zinc-800/50 rounded-lg p-3">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Memory</p>
-            <p className="text-sm text-white font-medium">{data.memory} MB</p>
-          </div>
-          <div className="bg-zinc-800/50 rounded-lg p-3 col-span-2">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-1">Start Command</p>
-            <p className="text-sm text-zinc-300 font-mono">{data.startCommand}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-border/40 flex items-center justify-between">
           <button
             onClick={onDeploy}
-            className="flex-1 h-10 text-sm text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 rounded-lg transition-all cursor-pointer"
+            className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
-            Deploy another
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Send another application
           </button>
-          <button
-            onClick={onClose}
-            className="flex-1 h-10 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all cursor-pointer"
-          >
-            Go to dashboard
-          </button>
+          <Button onClick={onClose} className="cursor-pointer text-[13px] bg-blue-600 hover:bg-blue-500">
+            Go to application
+          </Button>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
