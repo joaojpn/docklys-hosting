@@ -4,6 +4,7 @@ import { Bot } from './Dashboard'
 import { api } from '../services/api'
 import { ArrowLeft, Square, RotateCcw, Trash2, Loader2 } from 'lucide-react'
 import { EnvVars } from '../components/dashboard/EnvVars'
+import { FileEditor } from '../components/dashboard/FileEditor'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import { Separator } from '../components/ui/separator'
@@ -38,7 +39,7 @@ export function BotDetails({ bot, onBack, onDelete }: Props) {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [currentStatus, setCurrentStatus] = useState(bot.status)
-  const [activeTab, setActiveTab] = useState<'console' | 'overview' | 'env'>('console')
+  const [activeTab, setActiveTab] = useState<'console' | 'overview' | 'env' | 'files'>('console')
   const [logLines, setLogLines] = useState<string[]>([])
   const [logConnected, setLogConnected] = useState(false)
   const [ramHistory, setRamHistory] = useState<RamPoint[]>([])
@@ -114,6 +115,7 @@ export function BotDetails({ bot, onBack, onDelete }: Props) {
     { id: 'console' as const, label: 'Console' },
     { id: 'overview' as const, label: 'Overview' },
     { id: 'env' as const, label: 'Environment' },
+    { id: 'files' as const, label: 'Files' },
   ]
 
   return (
@@ -289,6 +291,17 @@ export function BotDetails({ bot, onBack, onDelete }: Props) {
           <Card className="border-border/50">
             <CardContent className="pt-6">
               <EnvVars botId={bot.id} />
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Files */}
+      {activeTab === 'files' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Card className="border-border/50 overflow-hidden">
+            <CardContent className="pt-6">
+              <FileEditor botId={bot.id} />
             </CardContent>
           </Card>
         </motion.div>
