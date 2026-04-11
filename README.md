@@ -29,6 +29,23 @@ your-bot/
 
 Zip it. Upload it. Done.
 
+## Screenshots
+
+<div align="center">
+  <img src="docs/assets/dashboard.png" alt="Docklys Dashboard" width="100%" />
+  <p><em>Dashboard — manage and monitor all your applications in real time</em></p>
+</div>
+
+<div align="center">
+  <img src="docs/assets/bot-details.png" alt="Docklys Bot Details" width="100%" />
+  <p><em>Bot Details — live logs, CPU, RAM monitoring and file editor</em></p>
+</div>
+
+<div align="center">
+  <img src="docs/assets/login.png" alt="Docklys Login" width="100%" />
+  <p><em>Clean and modern authentication with GitHub OAuth</em></p>
+</div>
+
 ## Features
 
 - **Zero-config deploys** — zip your project and upload, no configuration files required
@@ -39,6 +56,9 @@ Zip it. Upload it. Done.
 - **One-click actions** — start, stop, restart, and delete with a single click
 - **GitHub login** — sign in with your GitHub account or register with email
 - **Self-hosted** — run on your own machine or server, you own your data
+- **File editor** — view and edit your bot files directly in the dashboard with syntax highlighting
+- **Environment variables** — securely manage bot tokens and secrets per application
+- **RAM usage chart** — visualize memory consumption over time
 - **Open source** — MIT licensed, forever free
 
 ## Getting Started
