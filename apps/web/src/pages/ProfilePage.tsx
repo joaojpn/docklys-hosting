@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
-import { Loader2, CheckCircle, Trash2, User, Lock, Link, AlertTriangle, ArrowLeft } from 'lucide-react'
+import { Loader2, CheckCircle, Trash2, User, Lock, Link2, AlertTriangle, ArrowLeft, Shield } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
@@ -25,6 +25,27 @@ type Profile = {
 
 type Props = { onBack: () => void }
 type Section = 'account' | 'security' | 'connections' | 'danger'
+
+const navItems = [
+  { id: 'account' as Section, label: 'My Account', icon: User },
+  { id: 'security' as Section, label: 'Security', icon: Lock },
+  { id: 'connections' as Section, label: 'Connections', icon: Link2 },
+  { id: 'danger' as Section, label: 'Danger zone', icon: AlertTriangle, destructive: true },
+]
+
+function Field({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
+  return (
+    <div className="py-5 border-b border-border/30 last:border-0">
+      <div className="flex items-start justify-between gap-8">
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-medium mb-0.5">{label}</p>
+          {description && <p className="text-[12px] text-muted-foreground leading-relaxed">{description}</p>}
+        </div>
+        <div className="w-72 shrink-0">{children}</div>
+      </div>
+    </div>
+  )
+}
 
 export function ProfilePage({ onBack }: Props) {
   const { signOut, updateUser } = useAuth()
@@ -84,12 +105,9 @@ export function ProfilePage({ onBack }: Props) {
     return <div className="flex items-center justify-center py-32"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
   }
 
-  const navItems = [
-    { id: 'account' as Section, label: 'My Account', icon: User },
-    { id: 'security' as Section, label: 'Security', icon: Lock },
-    { id: 'connections' as Section, label: 'Connections', icon: Link },
-    { id: 'danger' as Section, label: 'Danger zone', icon: AlertTriangle, destructive: true },
-  ]
+  const memberSince = profile?.createdAt
+    ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : ''
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-8">
@@ -98,26 +116,30 @@ export function ProfilePage({ onBack }: Props) {
         Back to Dashboard
       </button>
 
-      <div className="flex gap-10">
-        <aside className="w-52 shrink-0">
-          <div className="flex items-center gap-3 mb-6">
-            <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-[13px]">
+      <div className="flex gap-8">
+        {/* Sidebar */}
+        <aside className="w-48 shrink-0">
+          <div className="flex items-center gap-2.5 px-2 mb-5">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-[12px]">
                 {profile?.name?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
               <p className="text-[13px] font-medium truncate">{profile?.name}</p>
-              <p className="text-[11px] text-muted-foreground truncate">{profile?.email}</p>
+              <p className="text-[11px] text-muted-foreground/60 truncate">{memberSince}</p>
             </div>
           </div>
+
           <nav className="space-y-0.5">
             {navItems.map(item => (
               <button key={item.id} onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors cursor-pointer text-left ${
-                  activeSection === item.id ? 'bg-accent text-accent-foreground font-medium'
-                  : item.destructive ? 'text-destructive/70 hover:text-destructive hover:bg-destructive/10'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer text-[13px] ${
+                  activeSection === item.id
+                    ? 'bg-accent text-foreground font-medium'
+                    : item.destructive
+                    ? 'text-destructive/60 hover:text-destructive hover:bg-destructive/10'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                 }`}>
                 <item.icon className="w-3.5 h-3.5 shrink-0" />
                 {item.label}
@@ -126,120 +148,125 @@ export function ProfilePage({ onBack }: Props) {
           </nav>
         </aside>
 
+        {/* Content */}
         <div className="flex-1 min-w-0">
           {activeSection === 'account' && (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-lg font-semibold mb-1" style={{ fontFamily: 'Geist, sans-serif' }}>Account Information</h2>
-                <p className="text-[13px] text-muted-foreground">Manage your account details.</p>
-              </div>
-              <Separator />
-              <div className="space-y-2 max-w-md">
-                <p className="text-[13px] font-medium mb-1">Display name</p>
-                <p className="text-[12px] text-muted-foreground mb-3">This is your public display name visible across the platform.</p>
+            <div>
+              <h2 className="text-[16px] font-semibold mb-1" style={{ fontFamily: 'Geist, sans-serif' }}>My Account</h2>
+              <p className="text-[13px] text-muted-foreground mb-6">Manage your name, email and account details.</p>
+              <Separator className="opacity-40 mb-0" />
+
+              <Field label="Display name" description="Your public name shown across the platform.">
                 <div className="flex gap-2">
-                  <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="text-[13px] cursor-text" />
-                  <Button onClick={handleUpdateName} disabled={nameLoading} className="cursor-pointer shrink-0">
-                    {nameLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : nameSuccess ? <CheckCircle className="w-4 h-4" /> : 'Save'}
+                  <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="text-[13px] cursor-text h-8" />
+                  <Button onClick={handleUpdateName} disabled={nameLoading} size="sm" className="cursor-pointer shrink-0 bg-blue-600 hover:bg-blue-500 h-8">
+                    {nameLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : nameSuccess ? <CheckCircle className="w-3.5 h-3.5" /> : 'Save'}
                   </Button>
                 </div>
-                {nameError && <p className="text-[12px] text-destructive mt-1.5">{nameError}</p>}
-              </div>
-              <Separator />
-              <div className="space-y-2 max-w-md">
-                <p className="text-[13px] font-medium mb-1">Email address</p>
-                <p className="text-[12px] text-muted-foreground mb-3">Your email is used for login and notifications.</p>
-                <Input value={profile?.email} disabled className="text-[13px] text-muted-foreground" />
-              </div>
-              <Separator />
-              <div className="space-y-2 max-w-md">
-                <p className="text-[13px] font-medium mb-1">Account ID</p>
-                <p className="text-[12px] text-muted-foreground mb-3">Your unique identifier in the Docklys platform.</p>
-                <Input value={profile?.id} disabled className="text-[13px] text-muted-foreground font-mono text-[11px]" />
-              </div>
+                {nameError && <p className="text-[11px] text-destructive mt-1">{nameError}</p>}
+              </Field>
+
+              <Field label="Email address" description="Used for login. Cannot be changed.">
+                <Input value={profile?.email} disabled className="text-[13px] text-muted-foreground h-8" />
+              </Field>
+
+              <Field label="Account ID" description="Your unique identifier in the platform.">
+                <Input value={profile?.id} disabled className="text-[12px] text-muted-foreground font-mono h-8" />
+              </Field>
+
+              <Field label="Member since" description="The date your account was created.">
+                <Input value={memberSince} disabled className="text-[13px] text-muted-foreground h-8" />
+              </Field>
             </div>
           )}
 
           {activeSection === 'security' && (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-lg font-semibold mb-1" style={{ fontFamily: 'Geist, sans-serif' }}>Security</h2>
-                <p className="text-[13px] text-muted-foreground">Manage your password and security settings.</p>
-              </div>
-              <Separator />
+            <div>
+              <h2 className="text-[16px] font-semibold mb-1" style={{ fontFamily: 'Geist, sans-serif' }}>Security</h2>
+              <p className="text-[13px] text-muted-foreground mb-6">Manage your password and authentication settings.</p>
+              <Separator className="opacity-40 mb-0" />
+
               {profile?.hasPassword ? (
-                <div className="space-y-4 max-w-md">
-                  <p className="text-[13px] font-medium mb-1">Change password</p>
-                  <p className="text-[12px] text-muted-foreground mb-3">Update your account password.</p>
-                  <div className="space-y-2">
-                    <Input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Current password" className="text-[13px] cursor-text" />
-                    <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password (min. 6 characters)" className="text-[13px] cursor-text" />
-                    {passwordError && <p className="text-[12px] text-destructive">{passwordError}</p>}
-                    {passwordSuccess && <p className="text-[12px] text-emerald-500 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Password updated successfully.</p>}
-                    <Button onClick={handleUpdatePassword} disabled={passwordLoading || !currentPassword || !newPassword} className="cursor-pointer text-[13px]">
-                      {passwordLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                      Update password
-                    </Button>
+                <>
+                  <Field label="Current password" description="Enter your current password to confirm.">
+                    <Input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••" className="text-[13px] cursor-text h-8" />
+                  </Field>
+                  <Field label="New password" description="Minimum 6 characters.">
+                    <div className="space-y-2">
+                      <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" className="text-[13px] cursor-text h-8" />
+                      {passwordError && <p className="text-[11px] text-destructive">{passwordError}</p>}
+                      {passwordSuccess && <p className="text-[11px] text-emerald-500 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Updated.</p>}
+                      <Button onClick={handleUpdatePassword} disabled={passwordLoading || !currentPassword || !newPassword} size="sm" className="cursor-pointer bg-blue-600 hover:bg-blue-500 h-8 text-[12px]">
+                        {passwordLoading && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
+                        Update password
+                      </Button>
+                    </div>
+                  </Field>
+                </>
+              ) : (
+                <div className="py-5">
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-border/40 max-w-md">
+                    <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <p className="text-[13px] text-muted-foreground">Your account uses GitHub OAuth. No password is set.</p>
                   </div>
                 </div>
-              ) : (
-                <p className="text-[13px] text-muted-foreground">Your account uses GitHub OAuth for authentication. No password is set.</p>
               )}
             </div>
           )}
 
           {activeSection === 'connections' && (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-lg font-semibold mb-1" style={{ fontFamily: 'Geist, sans-serif' }}>Connections</h2>
-                <p className="text-[13px] text-muted-foreground">Connect your accounts for easier sign-in.</p>
-              </div>
-              <Separator />
-              <div className="max-w-md">
-                <div className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md bg-muted border border-border flex items-center justify-center">
+            <div>
+              <h2 className="text-[16px] font-semibold mb-1" style={{ fontFamily: 'Geist, sans-serif' }}>Connections</h2>
+              <p className="text-[13px] text-muted-foreground mb-6">Connect external accounts for easier sign-in.</p>
+              <Separator className="opacity-40 mb-0" />
+
+              <Field label="GitHub" description="Connect your GitHub account for OAuth login.">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-md bg-muted border border-border flex items-center justify-center">
                       <GithubIcon />
                     </div>
-                    <div>
-                      <p className="text-[13px] font-medium">GitHub</p>
-                      <p className="text-[11px] text-muted-foreground">{profile?.hasGithub ? `Connected as @${profile.githubLogin}` : 'Not connected'}</p>
-                    </div>
+                    <span className="text-[12px] text-muted-foreground">
+                      {profile?.hasGithub ? `@${profile.githubLogin}` : 'Not connected'}
+                    </span>
                   </div>
                   {profile?.hasGithub ? (
-                    <div className="flex items-center gap-1.5 text-[12px] text-emerald-500"><CheckCircle className="w-3.5 h-3.5" /> Connected</div>
+                    <span className="text-[11px] text-emerald-500 flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" /> Connected
+                    </span>
                   ) : (
-                    <Button variant="outline" size="sm" onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github`} className="cursor-pointer text-[13px]">Connect</Button>
+                    <Button variant="outline" size="sm" onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github`} className="cursor-pointer text-[12px] h-7">
+                      Connect
+                    </Button>
                   )}
                 </div>
-              </div>
+              </Field>
             </div>
           )}
 
           {activeSection === 'danger' && (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-lg font-semibold mb-1 text-destructive" style={{ fontFamily: 'Geist, sans-serif' }}>Danger zone</h2>
-                <p className="text-[13px] text-muted-foreground">Irreversible actions for your account.</p>
-              </div>
-              <Separator />
-              <div className="max-w-md space-y-2">
-                <p className="text-[13px] font-medium">Delete account</p>
-                <p className="text-[12px] text-muted-foreground">Permanently delete your account, stop all running containers and remove all data. This action cannot be undone.</p>
-                {!confirmDelete ? (
-                  <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="cursor-pointer gap-2 text-[13px] mt-2">
-                    <Trash2 className="w-3.5 h-3.5" /> Delete account
-                  </Button>
-                ) : (
-                  <div className="flex gap-2 mt-2">
-                    <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)} className="cursor-pointer text-[13px]">Cancel</Button>
-                    <Button variant="destructive" size="sm" onClick={handleDeleteAccount} disabled={deleteLoading} className="cursor-pointer text-[13px]">
-                      {deleteLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                      Yes, delete my account
+            <div>
+              <h2 className="text-[16px] font-semibold mb-1 text-destructive" style={{ fontFamily: 'Geist, sans-serif' }}>Danger zone</h2>
+              <p className="text-[13px] text-muted-foreground mb-6">Irreversible actions for your account.</p>
+              <Separator className="opacity-40 mb-0" />
+
+              <Field label="Delete account" description="Permanently delete your account and all associated data. All running containers will be stopped and removed.">
+                <div>
+                  {!confirmDelete ? (
+                    <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="cursor-pointer gap-1.5 text-[12px] h-8">
+                      <Trash2 className="w-3.5 h-3.5" /> Delete account
                     </Button>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)} className="cursor-pointer text-[12px] h-8">Cancel</Button>
+                      <Button variant="destructive" size="sm" onClick={handleDeleteAccount} disabled={deleteLoading} className="cursor-pointer text-[12px] h-8">
+                        {deleteLoading && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
+                        Confirm
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Field>
             </div>
           )}
         </div>
