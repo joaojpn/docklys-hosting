@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/assets/logo.png" alt="Docklys" width="200" />
+  <img src="docs/assets/logo-docklys.png" alt="Docklys" width="500" />
 
   ### The self-hosted platform for apps deployment
 
