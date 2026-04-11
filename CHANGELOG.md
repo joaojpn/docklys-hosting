@@ -1,3 +1,18 @@
+## [0.5.0] - 2026-04-11
+
+### Added
+- File editor with Monaco Editor for viewing and editing bot files directly in the dashboard
+- Directory navigation in the file tree
+- Syntax highlighting for Python, JavaScript, TypeScript, JSON, YAML and more
+- Files tab in bot details page
+
+### Changed
+- Dashboard layout polished inspired by Linear
+- Deploy page redesigned with consistent identity
+- Success modal redesigned matching Square Cloud reference
+- Blue accent color applied consistently across all buttons
+- Workspace section more compact with Free badge
+
 ## [0.4.0] - 2026-04-10
 
 ### Added
