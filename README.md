@@ -51,20 +51,20 @@ your-bot/
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---|---|
-| 🚀 **Zero-config deploys** | Upload a `.zip`, no configuration files required |
-| 🐳 **Full isolation** | Every bot runs in its own Docker container with memory limits |
-| 🐍 **Multi-language** | Python and Node.js detected and configured automatically |
-| 📡 **Live logs** | Real-time log streaming via Server-Sent Events |
-| 📝 **File editor** | View and edit bot files directly in the dashboard (Monaco Editor) |
-| 🔐 **Environment variables** | Securely manage tokens and secrets per application |
-| 📊 **RAM chart** | Visualize memory usage over time |
-| 🔑 **GitHub OAuth** | Sign in with GitHub or email and password |
-| 🏠 **Self-hosted** | Your server, your data, your rules |
-| 💚 **Open source** | MIT licensed, forever free |
+| **Zero-config deploys** | Upload a `.zip`, no configuration files required |
+| **Full isolation** | Every bot runs in its own Docker container with memory limits |
+| **Multi-language** | Python and Node.js detected and configured automatically |
+| **Live logs** | Real-time log streaming via Server-Sent Events |
+| **File editor** | View and edit bot files directly in the dashboard (Monaco Editor) |
+| **Environment variables** | Securely manage tokens and secrets per application |
+| **RAM chart** | Visualize memory usage over time |
+| **GitHub OAuth** | Sign in with GitHub or email and password |
+| **Self-hosted** | Your server, your data, your rules |
+| **Open source** | MIT licensed, forever free |
 
 ---
 
@@ -113,7 +113,7 @@ Open [http://localhost:5173](http://localhost:5173) to access the dashboard.
 
 ---
 
-## 🧱 Stack
+## Stack
 
 | Layer | Technology |
 |---|---|
@@ -127,7 +127,7 @@ Open [http://localhost:5173](http://localhost:5173) to access the dashboard.
 
 ---
 
-## 📁 Monorepo Structure
+## Monorepo Structure
 
 ```
 docklys-hosting/
@@ -142,7 +142,7 @@ docklys-hosting/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
