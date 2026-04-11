@@ -31,7 +31,7 @@ export function Header({ onLogoClick, onProfileClick, currentView }: Props) {
   const { user, signOut } = useAuth()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background ">
       <div className="max-w-6xl mx-auto px-6 flex h-14 items-center gap-4">
 
         <motion.button
