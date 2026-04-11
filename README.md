@@ -1,69 +1,86 @@
-  <img src="docs/assets/logo.png" alt="Docklys" width="260" />
-  <p><strong>Deploy Discord, Telegram, and WhatsApp bots in seconds.<br/>No infrastructure knowledge required.</strong></p>
+<div align="center">
+  <img src="docs/assets/logo.png" alt="Docklys" width="200" />
 
-  <p>
-    <a href="https://github.com/joaojpn/docklys-hosting/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-red.svg" alt="License MIT" /></a>
-    <a href="https://github.com/joaojpn/docklys-hosting/actions/workflows/ci.yml"></a>
-    <img src="https://img.shields.io/badge/version-0.5.1-blue" alt="Version" />
-  </p>
+  ### The self-hosted platform for apps deployment
 
-  <p>
-    <a href="https://docklys.io">Website</a> ·
-    <a href="https://discord.gg/ke5V4NeQ49">Discord</a> ·
-    <a href="#-getting-started">Getting Started</a> ·
-    <a href="CONTRIBUTING.md">Contributing</a>
-  </p>
+  Zip your project. Upload it. Your app is live in seconds.
+
+  [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/joaojpn/docklys-hosting/blob/main/LICENSE)
+  ![Version](https://img.shields.io/badge/version-0.5.1-blue)
+  ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
+  ![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)
+
+  [Website](https://docklys.io) · [Discord](https://discord.gg/ke5V4NeQ49) · [Getting Started](#-getting-started) · [Contributing](CONTRIBUTING.md)
+</div>
 
 ---
 
 ## What is Docklys?
 
-Docklys is an open-source, self-hosted platform for deploying bots. Zip your project, upload it, and Docklys handles everything else — installing dependencies, isolating your application in a Docker container, and keeping it running.
+Docklys is an open-source, self-hosted platform for deploying Discord, Telegram, and WhatsApp bots. No infrastructure knowledge required — just zip your project, upload it, and Docklys handles the rest.
 
-Think of it as your personal Vercel, built specifically for bots.
 ```
 your-bot/
 ├── main.py           # your code
 └── requirements.txt  # your dependencies
 ```
 
-Zip it. Upload it. Done.
+**Zip it. Upload it. Done.**
+
+> [!NOTE]
+> Docklys is in active development. Features and APIs may change between versions.
+
+---
 
 ## Screenshots
 
 <div align="center">
-  <img src="docs/assets/dashboard.png" alt="Docklys Dashboard" width="100%" />
+  <img src="docs/assets/dashboard.png" alt="Dashboard" width="100%" />
   <p><em>Dashboard — manage and monitor all your applications in real time</em></p>
+
+  <br />
+
+  <img src="docs/assets/bot-details.png" alt="Bot Details" width="100%" />
+  <p><em>Bot Details — live logs, CPU/RAM monitoring and built-in file editor</em></p>
+
+  <br />
+
+  <img src="docs/assets/login.png" alt="Login" width="100%" />
+  <p><em>Authentication — GitHub OAuth and email/password</em></p>
 </div>
 
-<div align="center">
-  <img src="docs/assets/bot-details.png" alt="Docklys Bot Details" width="100%" />
-  <p><em>Bot Details — live logs, CPU, RAM monitoring and file editor</em></p>
-</div>
+---
 
-<div align="center">
-  <img src="docs/assets/login.png" alt="Docklys Login" width="100%" />
-  <p><em>Clean and modern authentication with GitHub OAuth</em></p>
-</div>
+## ✨ Features
 
-## Features
+| Feature | Description |
+|---|---|
+| 🚀 **Zero-config deploys** | Upload a `.zip`, no configuration files required |
+| 🐳 **Full isolation** | Every bot runs in its own Docker container with memory limits |
+| 🐍 **Multi-language** | Python and Node.js detected and configured automatically |
+| 📡 **Live logs** | Real-time log streaming via Server-Sent Events |
+| 📝 **File editor** | View and edit bot files directly in the dashboard (Monaco Editor) |
+| 🔐 **Environment variables** | Securely manage tokens and secrets per application |
+| 📊 **RAM chart** | Visualize memory usage over time |
+| 🔑 **GitHub OAuth** | Sign in with GitHub or email and password |
+| 🏠 **Self-hosted** | Your server, your data, your rules |
+| 💚 **Open source** | MIT licensed, forever free |
 
-- **Zero-config deploys** — zip your project and upload, no configuration files required
-- **Full isolation** — every application runs in its own Docker container
-- **Multi-platform** — supports Discord, Telegram, WhatsApp, and any long-running process
-- **Multi-language** — Python and Node.js detected automatically
-- **Real-time monitoring** — CPU, RAM, uptime, and logs streamed live
-- **One-click actions** — start, stop, restart, and delete with a single click
-- **GitHub login** — sign in with your GitHub account or register with email
-- **Self-hosted** — run on your own machine or server, you own your data
-- **File editor** — view and edit your bot files directly in the dashboard with syntax highlighting
-- **Environment variables** — securely manage bot tokens and secrets per application
-- **RAM usage chart** — visualize memory consumption over time
-- **Open source** — MIT licensed, forever free
+---
 
-## Getting Started
+## 🚀 Getting Started
+
+### One-command install (Ubuntu/Debian)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/joaojpn/docklys-hosting/main/install.sh | sudo bash
+```
+
+<details>
+<summary>Manual setup</summary>
 
 > **Prerequisites:** Docker, Node.js 20+, pnpm
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/joaojpn/docklys-hosting.git
@@ -89,18 +106,29 @@ cd ../.. && pnpm dev
 
 Open [http://localhost:5173](http://localhost:5173) to access the dashboard.
 
-## Stack
+</details>
+
+> [!IMPORTANT]
+> Make sure Docker is running before starting the development environment.
+
+---
+
+## 🧱 Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React, TypeScript, Tailwind CSS, shadcn/ui |
+| Frontend | React, TypeScript, Tailwind CSS, shadcn/ui, framer-motion |
 | Backend | Fastify, Node.js, TypeScript |
 | Database | PostgreSQL, Prisma |
 | Storage | MinIO |
 | Containers | Docker, Dockerode |
 | Auth | JWT, GitHub OAuth |
+| Editor | Monaco Editor |
 
-## Monorepo Structure
+---
+
+## 📁 Monorepo Structure
+
 ```
 docklys-hosting/
 ├── apps/
@@ -110,17 +138,22 @@ docklys-hosting/
 └── .github/          # CI/CD, issue templates, PR template
 ```
 
+---
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
-Found a bug? [Open an issue](https://github.com/joaojpn/docklys-hosting/issues/new?template=bug_report.yml).
-Have an idea? [Request a feature](https://github.com/joaojpn/docklys-hosting/issues/new?template=feature_request.yml).
-Want to chat? [Join our Discord](https://discord.gg/ke5V4NeQ49).
+- 🐛 Found a bug? [Open an issue](https://github.com/joaojpn/docklys-hosting/issues/new?template=bug_report.yml)
+- 💡 Have an idea? [Request a feature](https://github.com/joaojpn/docklys-hosting/issues/new?template=feature_request.yml)
+- 💬 Want to chat? [Join our Discord](https://discord.gg/ke5V4NeQ49)
 
-## 🔒 Security
+> [!WARNING]
+> Please do not open public issues for security vulnerabilities. Read [SECURITY.md](SECURITY.md) first.
 
-If you discover a security vulnerability, please read [SECURITY.md](SECURITY.md) before opening a public issue.
+---
 
 ## 📄 License
 
