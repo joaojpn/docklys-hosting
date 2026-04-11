@@ -13,6 +13,7 @@
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource/inter": "^5.2.5",
+    "@monaco-editor/react": "^4.7.0",
     "@remixicon/react": "^4.9.0",
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",

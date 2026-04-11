@@ -6,6 +6,7 @@ import { botsRoutes } from './modules/bots/bots.controller'
 import { logsRoutes } from './modules/bots/logs.controller'
 import { statsRoutes } from './modules/bots/stats.controller'
 import { envVarsRoutes } from './modules/bots/envvars.controller'
+import { filesRoutes } from './modules/bots/files.controller'
 import { profileRoutes } from './modules/profile/profile.controller'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
@@ -45,6 +46,7 @@ app.register(async (instance) => {
   instance.register(botsRoutes)
   instance.register(statsRoutes)
   instance.register(envVarsRoutes)
+  instance.register(filesRoutes)
   instance.register(profileRoutes)
 })
 
