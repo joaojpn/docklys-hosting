@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
 import { api } from '../services/api'
@@ -48,13 +49,63 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-5">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff06_1px,transparent_1px),linear-gradient(to_bottom,#ffffff06_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+
+      {/* Glow blob 1 */}
+      <motion.div
+        className="absolute pointer-events-none"
+        animate={{
+          scale: [1, 1.15, 0.95, 1],
+          borderRadius: [
+            '60% 40% 70% 30% / 50% 60% 40% 50%',
+            '40% 60% 30% 70% / 60% 40% 60% 40%',
+            '70% 30% 60% 40% / 40% 50% 60% 50%',
+            '60% 40% 70% 30% / 50% 60% 40% 50%',
+          ],
+        }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          width: '500px',
+          height: '350px',
+          background: 'rgba(37, 99, 235, 0.15)',
+          filter: 'blur(70px)',
+          position: 'absolute',
+          top: 'calc(50% - 175px)',
+          left: 'calc(50% - 250px)',
+        }}
+      />
+
+      {/* Glow blob 2 */}
+      <motion.div
+        className="absolute pointer-events-none"
+        animate={{
+          scale: [1, 0.9, 1.1, 1],
+          borderRadius: [
+            '40% 60% 30% 70% / 60% 40% 60% 40%',
+            '60% 40% 70% 30% / 50% 60% 40% 50%',
+            '30% 70% 40% 60% / 40% 60% 50% 50%',
+            '40% 60% 30% 70% / 60% 40% 60% 40%',
+          ],
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+        style={{
+          width: '350px',
+          height: '250px',
+          background: 'rgba(99, 102, 241, 0.1)',
+          filter: 'blur(60px)',
+          position: 'absolute',
+          top: 'calc(50% - 175px)',
+          left: 'calc(50% - 280px)',
+        }}
+      />
+
+      <div className="w-full max-w-sm space-y-5 relative z-10">
         <div className="flex justify-center">
           <DocklysLogo />
         </div>
 
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl text-center" style={{ fontFamily: 'Geist, sans-serif' }}>
               {isLogin ? 'Welcome back' : 'Create an account'}
@@ -92,7 +143,7 @@ export function Login() {
                 <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="text-[13px]" />
               </div>
               {error && <p className="text-[12px] text-destructive">{error}</p>}
-              <Button type="submit" className="w-full cursor-pointer text-[13px]" disabled={loading}>
+              <Button type="submit" className="w-full cursor-pointer text-[13px] bg-blue-600 hover:bg-blue-500" disabled={loading}>
                 {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                 {isLogin ? 'Sign in' : 'Create account'}
               </Button>
