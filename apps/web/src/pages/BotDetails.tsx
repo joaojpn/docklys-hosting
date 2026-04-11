@@ -1,9 +1,15 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { Bot } from './Dashboard'
 import { api } from '../services/api'
-import { ArrowLeft, Square, RotateCcw, Trash2, Loader2, Terminal, Cpu, MemoryStick, Clock } from 'lucide-react'
-import { BotLogs } from '../components/dashboard/BotLogs'
+import { ArrowLeft, Square, RotateCcw, Trash2, Loader2 } from 'lucide-react'
 import { EnvVars } from '../components/dashboard/EnvVars'
+import { Button } from '../components/ui/button'
+import { Card, CardContent } from '../components/ui/card'
+import { Separator } from '../components/ui/separator'
+import { LanguageIcon } from '../components/LanguageIcon'
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../components/ui/chart'
 
 type Props = {
   bot: Bot
@@ -18,51 +24,43 @@ type Stats = {
   ram: string
 }
 
-const PythonIcon = () => (
-  <div className="w-10 h-10 rounded-lg bg-[#3776AB]/20 border border-[#3776AB]/30 flex items-center justify-center">
-    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#3776AB">
-      <path d="M11.914 0C5.82 0 6.2 2.656 6.2 2.656l.007 2.752h5.814v.826H3.9S0 5.789 0 11.969c0 6.18 3.403 5.963 3.403 5.963h2.031v-2.868s-.109-3.403 3.347-3.403h5.766s3.24.052 3.24-3.13V3.347S18.28 0 11.914 0zm-3.21 1.875a1.031 1.031 0 1 1 0 2.063 1.031 1.031 0 0 1 0-2.063z"/>
-      <path d="M12.086 24c6.094 0 5.714-2.656 5.714-2.656l-.007-2.752h-5.814v-.826h8.121S24 18.211 24 12.031c0-6.18-3.403-5.963-3.403-5.963h-2.031v2.868s.109 3.403-3.347 3.403H9.453s-3.24-.052-3.24 3.13v5.184S5.72 24 12.086 24zm3.21-1.875a1.031 1.031 0 1 1 0-2.063 1.031 1.031 0 0 1 0 2.063z"/>
-    </svg>
-  </div>
-)
+type RamPoint = {
+  time: string
+  ram: number
+}
 
-const NodeIcon = () => (
-  <div className="w-10 h-10 rounded-lg bg-[#339933]/20 border border-[#339933]/30 flex items-center justify-center">
-    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#339933">
-      <path d="M11.998 24a2.44 2.44 0 0 1-1.218-.324l-3.862-2.286c-.578-.323-.295-.436-.105-.502.769-.269.924-.329 1.742-.796.086-.049.199-.031.288.019l2.97 1.762c.107.058.258.058.357 0l11.566-6.678c.107-.061.174-.185.174-.312V7.148c0-.132-.067-.252-.177-.317L12.18 .156a.365.365 0 0 0-.357 0L.258 6.831C.145 6.898.077 7.02.077 7.148v13.35c0 .128.068.25.18.314l3.17 1.83c1.72.86 2.772-.153 2.772-1.17V8.233c0-.188.15-.335.34-.335h1.47c.185 0 .337.147.337.335v13.24c0 2.292-1.25 3.607-3.421 3.607-.668 0-1.194 0-2.664-.724L.599 22.59A2.43 2.43 0 0 1 0 20.497V7.148c0-.841.45-1.626 1.18-2.049L12.743.425a2.498 2.498 0 0 1 2.496 0L26.8 7.099A2.432 2.432 0 0 1 27.98 9.148v13.35c0 .843-.453 1.624-1.183 2.047l-11.562 6.678c-.377.212-.8.324-1.237.324z"/>
-    </svg>
-  </div>
-)
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const config: Record<string, { label: string; class: string }> = {
-    RUNNING: { label: 'Running', class: 'bg-green-500/10 text-green-400 border-green-500/20' },
-    STOPPED: { label: 'Stopped', class: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
-    ERROR: { label: 'Error', class: 'bg-red-500/10 text-red-400 border-red-500/20' },
-    DEPLOYING: { label: 'Deploying', class: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  }
-  const { label, class: cls } = config[status] || config.STOPPED
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm border ${cls}`}>
-      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-      {label}
-    </span>
-  )
+const chartConfig = {
+  ram: { label: 'RAM (MB)', color: '#6366f1' },
 }
 
 export function BotDetails({ bot, onBack, onDelete }: Props) {
   const [stats, setStats] = useState<Stats | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [showLogs, setShowLogs] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [currentStatus, setCurrentStatus] = useState(bot.status)
+  const [activeTab, setActiveTab] = useState<'console' | 'overview' | 'env'>('console')
+  const [logLines, setLogLines] = useState<string[]>([])
+  const [logConnected, setLogConnected] = useState(false)
+  const [ramHistory, setRamHistory] = useState<RamPoint[]>([])
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333'
 
   const fetchStats = useCallback(async () => {
     try {
       const response = await api.get(`/bots/${bot.id}/stats`)
       setStats(response.data)
       setCurrentStatus(response.data.status)
+      if (response.data.ram && response.data.ram !== '—') {
+        const raw = parseFloat(response.data.ram.replace(/[^0-9.]/g, ''))
+        const isKB = response.data.ram.includes('KB')
+        const isGB = response.data.ram.includes('GB')
+        let ramMB = raw
+        if (isKB) ramMB = raw / 1024
+        if (isGB) ramMB = raw * 1024
+        const now = new Date()
+        const timeLabel = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`
+        setRamHistory(prev => [...prev.slice(-30), { time: timeLabel, ram: parseFloat(ramMB.toFixed(1)) }])
+      }
     } catch {}
   }, [bot.id])
 
@@ -72,193 +70,244 @@ export function BotDetails({ bot, onBack, onDelete }: Props) {
     return () => clearInterval(interval)
   }, [fetchStats])
 
+  useEffect(() => {
+    const token = localStorage.getItem('@Docklys:token')
+    if (!token) return
+    const es = new EventSource(`${apiUrl}/bots/${bot.id}/logs?token=${token}`)
+    es.onopen = () => setLogConnected(true)
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data)
+        if (data.line) setLogLines(prev => [...prev.slice(-500), data.line])
+      } catch {}
+    }
+    es.onerror = () => { setLogConnected(false); es.close() }
+    return () => es.close()
+  }, [bot.id])
+
+  useEffect(() => {
+    if (activeTab === 'console') bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [logLines, activeTab])
+
   const handleStop = async () => {
     setActionLoading('stop')
-    try {
-      await api.post(`/bots/${bot.id}/stop`)
-      setCurrentStatus('STOPPED')
-      fetchStats()
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to stop.')
-    } finally {
-      setActionLoading(null)
-    }
+    try { await api.post(`/bots/${bot.id}/stop`); setCurrentStatus('STOPPED'); fetchStats() }
+    catch (err: any) { alert(err.response?.data?.error || 'Failed to stop.') }
+    finally { setActionLoading(null) }
   }
 
   const handleRestart = async () => {
     setActionLoading('restart')
-    try {
-      await api.post(`/bots/${bot.id}/restart`)
-      setCurrentStatus('RUNNING')
-      fetchStats()
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to restart.')
-    } finally {
-      setActionLoading(null)
-    }
+    try { await api.post(`/bots/${bot.id}/restart`); setCurrentStatus('RUNNING'); fetchStats() }
+    catch (err: any) { alert(err.response?.data?.error || 'Failed to restart.') }
+    finally { setActionLoading(null) }
   }
 
   const handleDelete = async () => {
     setActionLoading('delete')
-    try {
-      await api.delete(`/bots/${bot.id}`)
-      onDelete()
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to delete.')
-      setActionLoading(null)
-    }
+    try { await api.delete(`/bots/${bot.id}`); onDelete() }
+    catch (err: any) { alert(err.response?.data?.error || 'Failed to delete.'); setActionLoading(null) }
   }
 
+  const isRunning = currentStatus === 'RUNNING'
+  const tabs = [
+    { id: 'console' as const, label: 'Console' },
+    { id: 'overview' as const, label: 'Overview' },
+    { id: 'env' as const, label: 'Environment' },
+  ]
+
   return (
-    <main className="relative max-w-4xl mx-auto px-6 py-10">
-
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors cursor-pointer mb-8"
-      >
-        <ArrowLeft className="w-4 h-4" />
+    <main className="max-w-6xl mx-auto px-6 py-8">
+      <motion.button onClick={onBack}
+        className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-8"
+        whileHover={{ x: -2 }}>
+        <ArrowLeft className="w-3.5 h-3.5" />
         Back to Dashboard
-      </button>
+      </motion.button>
 
-      <div className="flex items-start justify-between mb-8">
-        <div className="flex items-center gap-4">
-          {bot.language === 'python' ? <PythonIcon /> : <NodeIcon />}
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <LanguageIcon language={bot.language} size={38} />
           <div>
-            <h1 className="text-2xl font-semibold text-white">{bot.name}</h1>
-            {bot.description && <p className="text-sm text-zinc-400 mt-0.5">{bot.description}</p>}
-            <div className="mt-2">
-              <StatusBadge status={currentStatus} />
+            <div className="flex items-center gap-2">
+              <h1 className="text-[18px] font-semibold tracking-tight" style={{ fontFamily: 'Geist, sans-serif' }}>{bot.name}</h1>
+              {isRunning ? (
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-full font-medium">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+                  </span>
+                  Online
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/40 border border-border/50 px-2 py-0.5 rounded-full">
+                  <span className="inline-flex rounded-full h-1.5 w-1.5 bg-muted-foreground/40"></span>
+                  Offline
+                </span>
+              )}
             </div>
+            <p className="text-[11px] text-muted-foreground/40 font-mono mt-0.5">{bot.id}</p>
           </div>
         </div>
-
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowLogs(true)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 rounded-md transition-all cursor-pointer"
-          >
-            <Terminal className="w-3.5 h-3.5" />
-            Logs
-          </button>
-          {currentStatus === 'RUNNING' && (
-            <button
-              onClick={handleStop}
-              disabled={!!actionLoading}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-yellow-400 border border-yellow-400/20 hover:bg-yellow-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
-            >
+          {isRunning && (
+            <Button variant="outline" size="sm" onClick={handleStop} disabled={!!actionLoading}
+              className="gap-1.5 cursor-pointer text-[13px] hover:text-yellow-400 hover:border-yellow-400/20">
               {actionLoading === 'stop' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5" />}
               Stop
-            </button>
+            </Button>
           )}
-          <button
-            onClick={handleRestart}
-            disabled={!!actionLoading}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 border border-blue-400/20 hover:bg-blue-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
-          >
+          <Button variant="outline" size="sm" onClick={handleRestart} disabled={!!actionLoading}
+            className="gap-1.5 cursor-pointer text-[13px] hover:text-primary hover:border-primary/20">
             {actionLoading === 'restart' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
             Restart
-          </button>
-          <button
-            onClick={() => setConfirmDelete(true)}
-            disabled={!!actionLoading}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 border border-red-400/20 hover:bg-red-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setConfirmDelete(true)} disabled={!!actionLoading}
+            className="gap-1.5 cursor-pointer text-[13px] hover:text-destructive hover:border-destructive/20">
             <Trash2 className="w-3.5 h-3.5" />
             Delete
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <Card className="border-border/50 mb-6">
+        <CardContent className="py-4 px-6">
+          <div className="flex items-center">
+            {[
+              { label: 'CPU', value: stats?.cpu || '—' },
+              { label: 'Memory', value: stats?.ram || '—', sub: `limit ${bot.memory} MB` },
+              { label: 'Uptime', value: stats?.uptime || '—' },
+              { label: 'Language', value: bot.language ? bot.language.charAt(0).toUpperCase() + bot.language.slice(1) : '—' },
+            ].map((stat, i) => (
+              <div key={stat.label} className="flex items-center flex-1">
+                {i > 0 && <div className="w-px h-8 bg-border/50 mr-6" />}
+                <div>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">{stat.label}</p>
+                  <p className="text-[18px] font-semibold tracking-tight leading-none" style={{ fontFamily: 'Geist, sans-serif' }}>{stat.value}</p>
+                  {stat.sub && <p className="text-[11px] text-muted-foreground/40 mt-0.5">{stat.sub}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-1 border-b border-border/40 mb-6">
+        {tabs.map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2.5 text-[13px] transition-all cursor-pointer relative ${activeTab === tab.id ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground/70'}`}>
+            {tab.label}
+            {activeTab === tab.id && <motion.div layoutId="bot-tab" className="absolute bottom-0 left-0 right-0 h-px bg-foreground" />}
           </button>
-        </div>
+        ))}
+        {activeTab === 'console' && (
+          <div className="ml-auto flex items-center gap-1.5 text-[11px] pb-2">
+            <span className={`w-1.5 h-1.5 rounded-full ${logConnected ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'}`} />
+            <span className={logConnected ? 'text-emerald-500' : 'text-muted-foreground/40'}>
+              {logConnected ? 'Live' : 'Disconnected'}
+            </span>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-zinc-500 text-xs mb-2">
-            <Cpu className="w-3.5 h-3.5" />
-            CPU
-          </div>
-          <p className="text-xl font-semibold text-white">{stats?.cpu || '—'}</p>
-        </div>
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-zinc-500 text-xs mb-2">
-            <MemoryStick className="w-3.5 h-3.5" />
-            Memory
-          </div>
-          <p className="text-xl font-semibold text-white">{stats?.ram || '—'}</p>
-          <p className="text-xs text-zinc-600 mt-0.5">of {bot.memory} MB</p>
-        </div>
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-zinc-500 text-xs mb-2">
-            <Clock className="w-3.5 h-3.5" />
-            Uptime
-          </div>
-          <p className="text-xl font-semibold text-white">{stats?.uptime || '—'}</p>
-        </div>
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-zinc-500 text-xs mb-2">
-            <Terminal className="w-3.5 h-3.5" />
-            Language
-          </div>
-          <p className="text-xl font-semibold text-white capitalize">{bot.language || '—'}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-5">
-          <h2 className="text-sm font-medium text-white mb-4">Application info</h2>
-          <div className="space-y-3 text-sm">
-            <div>
-              <p className="text-zinc-500 text-xs mb-1">Application ID</p>
-              <p className="text-zinc-300 font-mono text-xs">{bot.id}</p>
+      {/* Console */}
+      {activeTab === 'console' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Card className="border-border/50 overflow-hidden" style={{ height: '460px', display: 'flex', flexDirection: 'column' }}>
+            <div className="flex-1 overflow-y-auto p-5 font-mono text-[12px] space-y-0.5 bg-black/20">
+              {logLines.length === 0 ? (
+                <p className="text-muted-foreground/30">Waiting for output...</p>
+              ) : (
+                logLines.map((line, i) => (
+                  <div key={i} className="leading-5 flex gap-3">
+                    <span className="text-muted-foreground/20 select-none shrink-0 w-8 text-right">{i + 1}</span>
+                    <span className="text-foreground/60 break-all">{line}</span>
+                  </div>
+                ))
+              )}
+              <div ref={bottomRef} />
             </div>
-            <div>
-              <p className="text-zinc-500 text-xs mb-1">Start command</p>
-              <p className="text-zinc-300 font-mono text-xs">{bot.startCommand}</p>
-            </div>
-            <div>
-              <p className="text-zinc-500 text-xs mb-1">Created</p>
-              <p className="text-zinc-300 text-xs">
-                {new Date(bot.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
-              </p>
-            </div>
-            <div>
-              <p className="text-zinc-500 text-xs mb-1">Memory limit</p>
-              <p className="text-zinc-300 text-xs">{bot.memory} MB</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-5">
-          <h2 className="text-sm font-medium text-white mb-4">Environment variables</h2>
-          <EnvVars botId={bot.id} />
-        </div>
-      </div>
-
-      {showLogs && (
-        <BotLogs botId={bot.id} botName={bot.name} onClose={() => setShowLogs(false)} />
+          </Card>
+        </motion.div>
       )}
 
+      {/* Overview */}
+      {activeTab === 'overview' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+          <Card className="border-border/50">
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-2 gap-x-12 gap-y-5">
+                {[
+                  { label: 'Application ID', value: bot.id, mono: true },
+                  { label: 'Start command', value: bot.startCommand, mono: true },
+                  { label: 'Created', value: new Date(bot.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' }) },
+                  { label: 'Memory limit', value: `${bot.memory} MB` },
+                ].map(item => (
+                  <div key={item.label}>
+                    <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">{item.label}</p>
+                    <p className={`text-[13px] text-foreground/80 ${item.mono ? 'font-mono text-[12px]' : ''}`}>{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {ramHistory.length > 1 && (
+            <Card className="border-border/50">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Memory usage over time</p>
+                  <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full font-medium uppercase tracking-wide">Beta</span>
+                </div>
+                <ChartContainer config={chartConfig} className="h-[180px] w-full">
+                  <AreaChart data={ramHistory} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="ramGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                    <XAxis dataKey="time" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} minTickGap={40} />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area dataKey="ram" type="natural" fill="url(#ramGrad)" stroke="#6366f1" strokeWidth={1.5} />
+                  </AreaChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
+      )}
+
+      {/* Environment */}
+      {activeTab === 'env' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Card className="border-border/50">
+            <CardContent className="pt-6">
+              <EnvVars botId={bot.id} />
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Delete modal */}
       {confirmDelete && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4">
-            <h2 className="text-base font-semibold text-white mb-2">Delete application?</h2>
-            <p className="text-sm text-zinc-400 mb-6">
-              This will stop the container and remove all data. This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="flex-1 h-10 text-sm text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 rounded-lg transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={!!actionLoading}
-                className="flex-1 h-10 text-sm font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg transition-all cursor-pointer disabled:opacity-50"
-              >
-                {actionLoading === 'delete' ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Delete'}
-              </button>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}>
+          <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border border-border/50 rounded-xl p-6 w-full max-w-sm mx-4">
+            <h2 className="text-[15px] font-semibold mb-2" style={{ fontFamily: 'Geist, sans-serif' }}>Delete application?</h2>
+            <p className="text-[13px] text-muted-foreground mb-6 leading-relaxed">This will stop the container and remove all data permanently.</p>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1 cursor-pointer" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+              <Button variant="destructive" className="flex-1 cursor-pointer" onClick={handleDelete} disabled={!!actionLoading}>
+                {actionLoading === 'delete' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+              </Button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </main>

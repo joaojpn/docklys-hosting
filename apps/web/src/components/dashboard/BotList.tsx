@@ -1,43 +1,34 @@
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Bot } from '../../pages/Dashboard'
-import { Loader2, Plus, Rocket, Square, RotateCcw, Trash2, ScrollText } from 'lucide-react'
+import { Loader2, Plus, Square, RotateCcw, Trash2, ScrollText, Rocket } from 'lucide-react'
 import { api } from '../../services/api'
 import { BotLogs } from './BotLogs'
-
-const PythonIcon = () => (
-  <div className="w-8 h-8 rounded-md bg-[#3776AB]/20 border border-[#3776AB]/30 flex items-center justify-center">
-    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="#3776AB">
-      <path d="M11.914 0C5.82 0 6.2 2.656 6.2 2.656l.007 2.752h5.814v.826H3.9S0 5.789 0 11.969c0 6.18 3.403 5.963 3.403 5.963h2.031v-2.868s-.109-3.403 3.347-3.403h5.766s3.24.052 3.24-3.13V3.347S18.28 0 11.914 0zm-3.21 1.875a1.031 1.031 0 1 1 0 2.063 1.031 1.031 0 0 1 0-2.063z"/>
-      <path d="M12.086 24c6.094 0 5.714-2.656 5.714-2.656l-.007-2.752h-5.814v-.826h8.121S24 18.211 24 12.031c0-6.18-3.403-5.963-3.403-5.963h-2.031v2.868s.109 3.403-3.347 3.403H9.453s-3.24-.052-3.24 3.13v5.184S5.72 24 12.086 24zm3.21-1.875a1.031 1.031 0 1 1 0-2.063 1.031 1.031 0 0 1 0 2.063z"/>
-    </svg>
-  </div>
-)
-
-const NodeIcon = () => (
-  <div className="w-8 h-8 rounded-md bg-[#339933]/20 border border-[#339933]/30 flex items-center justify-center">
-    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="#339933">
-      <path d="M11.998 24a2.44 2.44 0 0 1-1.218-.324l-3.862-2.286c-.578-.323-.295-.436-.105-.502.769-.269.924-.329 1.742-.796.086-.049.199-.031.288.019l2.97 1.762c.107.058.258.058.357 0l11.566-6.678c.107-.061.174-.185.174-.312V7.148c0-.132-.067-.252-.177-.317L12.18 .156a.365.365 0 0 0-.357 0L.258 6.831C.145 6.898.077 7.02.077 7.148v13.35c0 .128.068.25.18.314l3.17 1.83c1.72.86 2.772-.153 2.772-1.17V8.233c0-.188.15-.335.34-.335h1.47c.185 0 .337.147.337.335v13.24c0 2.292-1.25 3.607-3.421 3.607-.668 0-1.194 0-2.664-.724L.599 22.59A2.43 2.43 0 0 1 0 20.497V7.148c0-.841.45-1.626 1.18-2.049L12.743.425a2.498 2.498 0 0 1 2.496 0L26.8 7.099A2.432 2.432 0 0 1 27.98 9.148v13.35c0 .843-.453 1.624-1.183 2.047l-11.562 6.678c-.377.212-.8.324-1.237.324z"/>
-    </svg>
-  </div>
-)
-
-const UnknownIcon = () => (
-  <div className="w-8 h-8 rounded-md bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-    <span className="text-zinc-400 text-xs font-bold">?</span>
-  </div>
-)
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { LanguageIcon } from '../LanguageIcon'
 
 const StatusBadge = ({ status }: { status: Bot['status'] }) => {
-  const config = {
-    RUNNING: { label: 'Running', class: 'bg-green-500/10 text-green-400 border-green-500/20' },
-    STOPPED: { label: 'Stopped', class: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
-    ERROR: { label: 'Error', class: 'bg-red-500/10 text-red-400 border-red-500/20' },
-    DEPLOYING: { label: 'Deploying', class: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+  if (status === 'RUNNING') {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[12px] text-emerald-400">
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+        </span>
+        Running
+      </span>
+    )
   }
-  const { label, class: cls } = config[status]
+  const config = {
+    STOPPED: { label: 'Stopped', color: 'text-muted-foreground', dot: 'bg-muted-foreground/50' },
+    ERROR: { label: 'Error', color: 'text-destructive', dot: 'bg-destructive' },
+    DEPLOYING: { label: 'Deploying', color: 'text-primary', dot: 'bg-primary' },
+  }
+  const { label, color, dot } = config[status] || config.STOPPED
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${cls}`}>
-      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+    <span className={`inline-flex items-center gap-1.5 text-[12px] ${color}`}>
+      <span className={`inline-flex rounded-full h-1.5 w-1.5 ${dot}`}></span>
       {label}
     </span>
   )
@@ -59,203 +50,159 @@ export function BotList({ bots, loading, onNewBot, onRefresh, onSelectBot }: Pro
   const handleStop = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
     setActionLoading(id + '-stop')
-    try {
-      await api.post(`/bots/${id}/stop`)
-      onRefresh()
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to stop.')
-    } finally {
-      setActionLoading(null)
-    }
+    try { await api.post(`/bots/${id}/stop`); onRefresh() }
+    catch (err: any) { alert(err.response?.data?.error || 'Failed to stop.') }
+    finally { setActionLoading(null) }
   }
 
   const handleRestart = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
     setActionLoading(id + '-restart')
-    try {
-      await api.post(`/bots/${id}/restart`)
-      onRefresh()
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to restart.')
-    } finally {
-      setActionLoading(null)
-    }
+    try { await api.post(`/bots/${id}/restart`); onRefresh() }
+    catch (err: any) { alert(err.response?.data?.error || 'Failed to restart.') }
+    finally { setActionLoading(null) }
   }
 
   const handleDelete = async (id: string) => {
     setActionLoading(id + '-delete')
-    try {
-      await api.delete(`/bots/${id}`)
-      setConfirmDelete(null)
-      onRefresh()
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to delete.')
-    } finally {
-      setActionLoading(null)
-    }
+    try { await api.delete(`/bots/${id}`); setConfirmDelete(null); onRefresh() }
+    catch (err: any) { alert(err.response?.data?.error || 'Failed to delete.') }
+    finally { setActionLoading(null) }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-32">
-        <Loader2 className="w-6 h-6 animate-spin text-zinc-600" />
+      <div className="space-y-2">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-16 bg-muted/20 rounded-xl animate-pulse border border-border/40" />
+        ))}
       </div>
     )
   }
 
   if (bots.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-zinc-900/80 border border-white/5 flex items-center justify-center mb-6">
-          <Rocket className="w-7 h-7 text-zinc-600" />
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center py-32 text-center"
+      >
+        <div className="w-16 h-16 rounded-2xl bg-muted/30 border border-border/50 flex items-center justify-center mb-6">
+          <Rocket className="w-6 h-6 text-muted-foreground" />
         </div>
-        <h2 className="text-xl font-semibold text-white mb-2">No applications yet</h2>
-        <p className="text-sm text-zinc-500 max-w-xs mb-6">
-          Deploy your first bot in seconds — just zip your project and upload.
+        <h2 className="text-lg font-semibold mb-2" style={{ fontFamily: 'Geist, sans-serif' }}>
+          No applications yet
+        </h2>
+        <p className="text-[13px] text-muted-foreground max-w-xs mb-6 leading-relaxed">
+          Deploy your first bot in seconds — zip your project and upload it.
         </p>
-        <div className="bg-zinc-900/60 border border-white/5 rounded-xl px-5 py-4 text-left mb-8 font-mono text-xs space-y-0.5">
-          <p className="text-zinc-500 mb-2 font-sans">Required zip structure:</p>
-          <p className="text-zinc-400">your-bot/</p>
-          <p className="text-zinc-400">├── main.py <span className="text-zinc-600"># or index.js</span></p>
-          <p className="text-zinc-400">├── requirements.txt <span className="text-zinc-600"># or package.json</span></p>
-          <p className="text-zinc-400">└── docklys.config <span className="text-zinc-600"># optional</span></p>
-        </div>
-        <button
-          onClick={onNewBot}
-          className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-all cursor-pointer"
-        >
+        <Button onClick={onNewBot} className="cursor-pointer gap-2">
           <Plus className="w-4 h-4" />
           New Application
-        </button>
-      </div>
+        </Button>
+      </motion.div>
     )
   }
 
   const running = bots.filter(b => b.status === 'RUNNING').length
-  const stopped = bots.filter(b => b.status !== 'RUNNING').length
 
   return (
     <>
-      <div className="border border-white/5 rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500" />
-            <span className="text-sm font-medium">My Applications</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="text-green-400">{running} Running</span>
-            <span className="text-zinc-600">•</span>
-            <span className="text-zinc-400">{stopped} Stopped</span>
-          </div>
-        </div>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[12px] text-muted-foreground">{bots.length} application{bots.length !== 1 ? 's' : ''}</span>
+        {running > 0 && (
+          <>
+            <span className="text-muted-foreground/30">·</span>
+            <span className="text-[12px] text-emerald-500">{running} running</span>
+          </>
+        )}
+      </div>
 
+      <Card className="overflow-hidden border-border/50">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-white/5">
-              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">NO</th>
-              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">APPLICATION</th>
-              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">CREATED</th>
-              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">MEMORY</th>
-              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">STATUS</th>
-              <th className="text-left px-6 py-3 text-xs text-zinc-500 font-medium">ACTIONS</th>
+            <tr className="border-b border-border/50">
+              <th className="text-left px-5 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Application</th>
+              <th className="text-left px-5 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Status</th>
+              <th className="text-left px-5 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Memory</th>
+              <th className="text-left px-5 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Created</th>
+              <th className="text-right px-5 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {bots.map((bot, index) => (
-              <tr
-                key={bot.id}
-                onClick={() => onSelectBot(bot)}
-                className="border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer"
-              >
-                <td className="px-6 py-4 text-xs text-zinc-600">
-                  {String(index + 1).padStart(2, '0')}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    {bot.language === 'python' ? <PythonIcon /> : bot.language === 'node' ? <NodeIcon /> : <UnknownIcon />}
-                    <div>
-                      <p className="text-sm font-medium text-white">{bot.name}</p>
-                      {bot.description && <p className="text-xs text-zinc-500 mt-0.5">{bot.description}</p>}
+            <AnimatePresence>
+              {bots.map((bot, index) => (
+                <motion.tr
+                  key={bot.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => onSelectBot(bot)}
+                  className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors cursor-pointer group"
+                >
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <LanguageIcon language={bot.language} size={30} />
+                      <div>
+                        <p className="text-[13px] font-medium text-foreground/80 group-hover:text-foreground transition-colors">{bot.name}</p>
+                        {bot.description && <p className="text-[11px] text-muted-foreground mt-0.5">{bot.description}</p>}
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-zinc-400">
-                  {new Date(bot.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </td>
-                <td className="px-6 py-4 text-sm text-zinc-400">{bot.memory} MB</td>
-                <td className="px-6 py-4">
-                  <StatusBadge status={bot.status} />
-                </td>
-                <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={e => { e.stopPropagation(); setLogsBot({ id: bot.id, name: bot.name }) }}
-                      title="Logs"
-                      className="p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-white/5 rounded-md transition-all cursor-pointer"
-                    >
-                      <ScrollText className="w-3.5 h-3.5" />
-                    </button>
-                    {bot.status === 'RUNNING' && (
-                      <button
-                        onClick={e => handleStop(e, bot.id)}
-                        disabled={!!actionLoading}
-                        title="Stop"
-                        className="p-1.5 text-zinc-500 hover:text-yellow-400 hover:bg-yellow-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
-                      >
-                        {actionLoading === bot.id + '-stop' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5" />}
-                      </button>
-                    )}
-                    <button
-                      onClick={e => { e.stopPropagation(); setActionLoading(bot.id + '-restart'); api.post(`/bots/${bot.id}/restart`).then(() => onRefresh()).finally(() => setActionLoading(null)) }}
-                      disabled={!!actionLoading}
-                      title="Restart"
-                      className="p-1.5 text-zinc-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      {actionLoading === bot.id + '-restart' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
-                    </button>
-                    <button
-                      onClick={e => { e.stopPropagation(); setConfirmDelete(bot.id) }}
-                      disabled={!!actionLoading}
-                      title="Delete"
-                      className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-5 py-3.5"><StatusBadge status={bot.status} /></td>
+                  <td className="px-5 py-3.5 text-[13px] text-muted-foreground">{bot.memory} MB</td>
+                  <td className="px-5 py-3.5 text-[13px] text-muted-foreground">
+                    {new Date(bot.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer text-muted-foreground hover:text-foreground"
+                        onClick={e => { e.stopPropagation(); setLogsBot({ id: bot.id, name: bot.name }) }}>
+                        <ScrollText className="w-3.5 h-3.5" />
+                      </Button>
+                      {bot.status === 'RUNNING' && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-yellow-400 cursor-pointer text-muted-foreground"
+                          onClick={e => handleStop(e, bot.id)} disabled={!!actionLoading}>
+                          {actionLoading === bot.id + '-stop' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Square className="w-3.5 h-3.5" />}
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary cursor-pointer text-muted-foreground"
+                        onClick={e => handleRestart(e, bot.id)} disabled={!!actionLoading}>
+                        {actionLoading === bot.id + '-restart' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-destructive cursor-pointer text-muted-foreground"
+                        onClick={e => { e.stopPropagation(); setConfirmDelete(bot.id) }} disabled={!!actionLoading}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
+            </AnimatePresence>
           </tbody>
         </table>
-      </div>
+      </Card>
 
       {logsBot && (
         <BotLogs botId={logsBot.id} botName={logsBot.name} onClose={() => setLogsBot(null)} />
       )}
 
       {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4">
-            <h2 className="text-base font-semibold text-white mb-2">Delete application?</h2>
-            <p className="text-sm text-zinc-400 mb-6">
-              This will stop the container and remove all data. This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmDelete(null)}
-                className="flex-1 h-10 text-sm text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 rounded-lg transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(confirmDelete)}
-                disabled={!!actionLoading}
-                className="flex-1 h-10 text-sm font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg transition-all cursor-pointer disabled:opacity-50"
-              >
-                {actionLoading === confirmDelete + '-delete' ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Delete'}
-              </button>
-            </div>
-          </div>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+          <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
+            <Card className="p-6 w-full max-w-sm mx-4 border-border/50">
+              <h2 className="text-[15px] font-semibold mb-2" style={{ fontFamily: 'Geist, sans-serif' }}>Delete application?</h2>
+              <p className="text-[13px] text-muted-foreground mb-6 leading-relaxed">
+                This will stop the container and remove all data. This action cannot be undone.
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 cursor-pointer" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+                <Button variant="destructive" className="flex-1 cursor-pointer" onClick={() => handleDelete(confirmDelete)} disabled={!!actionLoading}>
+                  {actionLoading === confirmDelete + '-delete' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+                </Button>
+              </div>
+            </Card>
+          </motion.div>
         </div>
       )}
     </>

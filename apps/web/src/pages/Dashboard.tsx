@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { AnimatePresence } from 'framer-motion'
 import { api } from '../services/api'
-import { LogOut, RefreshCw, Plus, User } from 'lucide-react'
+import { RefreshCw, Plus, Search } from 'lucide-react'
 import { BotList } from '../components/dashboard/BotList'
 import { DeployBot } from '../components/dashboard/DeployBot'
 import { SuccessModal } from '../components/dashboard/SuccessModal'
 import { BotDetails } from './BotDetails'
 import { ProfilePage } from './ProfilePage'
+import { Header } from '../components/Header'
+import { PageTransition } from '../components/PageTransition'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Avatar, AvatarFallback } from '../components/ui/avatar'
+import { useAuth } from '../contexts/AuthContext'
 
 export type Bot = {
   id: string
@@ -28,12 +34,13 @@ export type DeployedBot = {
 }
 
 export function Dashboard() {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const [view, setView] = useState<'list' | 'deploy' | 'details' | 'profile'>('list')
   const [bots, setBots] = useState<Bot[]>([])
   const [loading, setLoading] = useState(true)
   const [successData, setSuccessData] = useState<DeployedBot | null>(null)
   const [selectedBot, setSelectedBot] = useState<Bot | null>(null)
+  const [search, setSearch] = useState('')
 
   const fetchBots = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -47,9 +54,7 @@ export function Dashboard() {
     }
   }, [])
 
-  useEffect(() => {
-    fetchBots()
-  }, [fetchBots])
+  useEffect(() => { fetchBots() }, [fetchBots])
 
   useEffect(() => {
     if (view !== 'list') return
@@ -63,88 +68,121 @@ export function Dashboard() {
     fetchBots()
   }
 
-  const handleSelectBot = (bot: Bot) => {
-    setSelectedBot(bot)
-    setView('details')
-  }
+  const filteredBots = bots.filter(b =>
+    b.name.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const running = bots.filter(b => b.status === 'RUNNING').length
+  const stopped = bots.filter(b => b.status !== 'RUNNING').length
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <Header
+        onLogoClick={() => setView('list')}
+        onProfileClick={() => setView('profile')}
+        isProfileActive={view === 'profile'}
+        currentView={view}
+      />
 
-      <div className="fixed inset-0 bg-[linear-gradient(to_right,#ffffff06_1px,transparent_1px),linear-gradient(to_bottom,#ffffff06_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#050505]/95 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setView('list')}>
-            <span className="text-lg font-semibold tracking-tight">Docklys</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setView('profile')}
-              className={`flex items-center gap-2 text-sm transition-colors cursor-pointer ${view === 'profile' ? 'text-white' : 'text-zinc-400 hover:text-white'}`}
-            >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-700 to-blue-500 flex items-center justify-center text-[10px] font-bold text-white">
-                {user?.name?.charAt(0).toUpperCase()}
+      <AnimatePresence mode="wait">
+        {view === 'list' && (
+          <PageTransition key="list">
+            <main className="max-w-6xl mx-auto px-6 py-8 w-full">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-[13px]">
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-medium">{user?.name}</span>
+                      <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium uppercase tracking-wide">
+                        Your Account
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground/50 font-mono">{user?.id}</p>
+                  </div>
+                </div>
+                <Button size="sm" onClick={() => setView('deploy')} className="cursor-pointer gap-1.5 text-[13px]">
+                  <Plus className="w-3.5 h-3.5" />
+                  New Application
+                </Button>
               </div>
-              <span className="hidden md:inline">{user?.name?.split(' ')[0]}</span>
-            </button>
-            <div className="h-4 w-px bg-white/10" />
-            <button onClick={signOut} className="text-zinc-400 hover:text-red-400 transition-colors cursor-pointer" title="Sign out">
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </header>
 
-      {view === 'list' && (
-        <main className="relative max-w-6xl mx-auto px-6 py-10">
-          <div className="flex items-start justify-between mb-8">
-            <div>
-              <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
-              <p className="text-sm text-zinc-400 mt-1">Manage and monitor your applications in real time.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => fetchBots()}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 rounded-md transition-all cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Refresh
-              </button>
-              <button
-                onClick={() => setView('deploy')}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-all cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                New Application
-              </button>
-            </div>
-          </div>
-          <BotList
-            bots={bots}
-            loading={loading}
-            onNewBot={() => setView('deploy')}
-            onRefresh={() => fetchBots()}
-            onSelectBot={handleSelectBot}
-          />
-        </main>
-      )}
+              <div className="flex items-center gap-2 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search in applications..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="pl-9 text-[13px] cursor-text"
+                  />
+                </div>
+                <Button variant="outline" size="sm" onClick={() => fetchBots()} className="cursor-pointer gap-1.5 text-[13px] shrink-0">
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Refresh
+                </Button>
+              </div>
 
-      {view === 'deploy' && (
-        <DeployBot onBack={() => setView('list')} onSuccess={handleDeploySuccess} />
-      )}
+              <BotList
+                bots={filteredBots}
+                loading={loading}
+                onNewBot={() => setView('deploy')}
+                onRefresh={() => fetchBots()}
+                onSelectBot={(bot) => { setSelectedBot(bot); setView('details') }}
+              />
+            </main>
 
-      {view === 'details' && selectedBot && (
-        <BotDetails
-          bot={selectedBot}
-          onBack={() => { setView('list'); fetchBots() }}
-          onDelete={() => { setView('list'); fetchBots() }}
-        />
-      )}
+            {!loading && bots.length > 0 && (
+              <div className="border-t border-border/40 py-3 mt-auto">
+                <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+                  <p className="text-[12px] text-muted-foreground">
+                    Total of <span className="text-foreground font-medium">{bots.length}</span> application{bots.length !== 1 ? 's' : ''}
+                    {search && filteredBots.length !== bots.length && (
+                      <span className="ml-1">· <span className="text-foreground font-medium">{filteredBots.length}</span> matching</span>
+                    )}
+                  </p>
+                  <div className="flex items-center gap-4 text-[12px]">
+                    <span className="flex items-center gap-1.5 text-emerald-500">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                      {running} online
+                    </span>
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 inline-block" />
+                      {stopped} offline
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </PageTransition>
+        )}
 
-      {view === 'profile' && (
-        <ProfilePage onBack={() => setView('list')} />
-      )}
+        {view === 'deploy' && (
+          <PageTransition key="deploy">
+            <DeployBot onBack={() => setView('list')} onSuccess={handleDeploySuccess} />
+          </PageTransition>
+        )}
+
+        {view === 'details' && selectedBot && (
+          <PageTransition key="details">
+            <BotDetails
+              bot={selectedBot}
+              onBack={() => { setView('list'); fetchBots() }}
+              onDelete={() => { setView('list'); fetchBots() }}
+            />
+          </PageTransition>
+        )}
+
+        {view === 'profile' && (
+          <PageTransition key="profile">
+            <ProfilePage onBack={() => setView('list')} />
+          </PageTransition>
+        )}
+      </AnimatePresence>
 
       {successData && (
         <SuccessModal
