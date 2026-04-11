@@ -1,3 +1,24 @@
+## [0.4.0] - 2026-04-10
+
+### Added
+- Complete UI redesign using shadcn/ui components
+- New navbar with navigation links, Docs and Discord
+- User dropdown menu with profile and sign out
+- Search bar to filter applications by name
+- Workspace section showing user name and account ID
+- Footer with online/offline application count
+- Bot details page with Console, Overview and Environment tabs
+- Live logs visible by default in bot details
+- RAM usage chart (beta) in Overview tab
+- Official Python and Node.js language icons
+- Profile page redesigned with sidebar navigation
+- Login page redesigned with GitHub OAuth and email/password
+
+### Changed
+- Dashboard layout restructured inspired by SquareCloud
+- Bot details stat row without card borders for cleaner look
+- Application status badges with animated pulse for running bots
+
 ## [0.3.0] - 2026-04-05
 
 ### Added
