@@ -26,7 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const storedUser = localStorage.getItem('@Docklys:user')
     const storedToken = localStorage.getItem('@Docklys:token')
-
     if (storedToken && storedUser) {
       api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
       setUser(JSON.parse(storedUser))
@@ -37,7 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   async function signIn({ email, password }: { email: string; password: string }) {
     const response = await api.post('/auth/login', { email, password })
     const { token, user } = response.data
-
     localStorage.setItem('@Docklys:user', JSON.stringify(user))
     localStorage.setItem('@Docklys:token', token)
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`
