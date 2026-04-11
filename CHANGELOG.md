@@ -1,3 +1,8 @@
+## [0.5.1] - 2026-04-11
+
+### Changed
+- Login page redesigned with animated glow blobs and grid background
+
 ## [0.5.0] - 2026-04-11
 
 ### Added
