@@ -12,6 +12,7 @@ import { PageTransition } from '../components/PageTransition'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { useAuth } from '../contexts/AuthContext'
+import { OnboardingDialog } from '../components/OnboardingDialog'
 
 export type Bot = {
   id: string
@@ -40,6 +41,12 @@ export function Dashboard() {
   const [successData, setSuccessData] = useState<DeployedBot | null>(null)
   const [selectedBot, setSelectedBot] = useState<Bot | null>(null)
   const [search, setSearch] = useState('')
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('@Docklys:onboarded'))
+
+  const handleCloseOnboarding = () => {
+    localStorage.setItem('@Docklys:onboarded', 'true')
+    setShowOnboarding(false)
+  }
   const [showFilter, setShowFilter] = useState(false)
   const [sortBy, setSortBy] = useState<'name' | 'status' | 'memory' | 'createdAt'>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
@@ -99,7 +106,7 @@ export function Dashboard() {
         <div className="max-w-5xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="text-[10px] font-semibold bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase tracking-wide">Early Access</span>
-            <p className="text-[12px] text-blue-300/80">Docklys is in early access — features may change. We appreciate your feedback.</p>
+            <p className="text-[12px] text-blue-300/80">Nuvee is in early access — features may change. We appreciate your feedback.</p>
           </div>
           <a href="https://discord.gg/ke5V4NeQ49" target="_blank" rel="noopener noreferrer"
             className="text-[12px] text-blue-400 hover:text-blue-300 transition-colors cursor-pointer shrink-0">
@@ -263,6 +270,8 @@ export function Dashboard() {
           </PageTransition>
         )}
       </AnimatePresence>
+
+      {showOnboarding && <OnboardingDialog onClose={handleCloseOnboarding} />}
 
       {successData && (
         <SuccessModal

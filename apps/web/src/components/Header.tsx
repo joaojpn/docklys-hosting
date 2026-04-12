@@ -1,4 +1,5 @@
 import { useAuth } from '../contexts/AuthContext'
+import nuveeLogo from '../assets/Nuvee_typo_logo_white4x.png'
 import { LogOut, ChevronDown, LayoutGrid, User, MessageCircle, BookOpen } from 'lucide-react'
 import {
   DropdownMenu,
@@ -15,14 +16,6 @@ type Props = {
   currentView: string
 }
 
-const DocklysLogo = () => (
-  <svg width="20" height="16" viewBox="0 0 108 86" fill="none">
-    <path d="M38.5 0C59.7 0 34.5 19.3 34.5 43S59.7 86 38.5 86 0 66.7 0 43 17.2 0 38.5 0Z" fill="hsl(var(--primary))"/>
-    <path d="M80.1 3C101.7 3 72.1 20.7 72.1 42.5S101.7 82 80.1 82 41 64.3 41 42.5 58.5 3 80.1 3Z" fill="hsl(var(--primary))" opacity=".55"/>
-    <path d="M102.6 16C117.3 16 97.2 27.9 97.2 42.5S117.3 69 102.6 69 76 57.1 76 42.5 87.9 16 102.6 16Z" fill="hsl(var(--primary))" opacity=".25"/>
-  </svg>
-)
-
 export function Header({ onLogoClick, onProfileClick, currentView }: Props) {
   const { user, signOut } = useAuth()
 
@@ -37,11 +30,8 @@ export function Header({ onLogoClick, onProfileClick, currentView }: Props) {
     <header className="w-full border-b border-border/40 bg-background sticky top-0 z-40">
       {/* Top row */}
       <div className="max-w-5xl mx-auto px-6 flex items-center justify-between h-12">
-        <button onClick={onLogoClick} className="flex items-center gap-2 cursor-pointer">
-          <DocklysLogo />
-          <span className="font-semibold text-[15px] tracking-tight" style={{ fontFamily: 'Geist, sans-serif' }}>
-            Docklys
-          </span>
+        <button onClick={onLogoClick} className="flex items-center cursor-pointer">
+          <img src={nuveeLogo} alt="Nuvee" className="h-5 object-contain" />
         </button>
 
         <div className="flex items-center gap-3">
