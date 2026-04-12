@@ -1,3 +1,13 @@
+## [0.5.2] - 2026-04-12
+
+### Added
+- Onboarding dialog with 4-slide carousel shown on first login
+- Early Access banner on dashboard with Discord feedback link
+
+### Changed
+- Profile page redesigned with cleaner field-based layout
+- Sidebar with avatar and member since date
+
 ## [0.5.1] - 2026-04-11
 
 ### Changed
