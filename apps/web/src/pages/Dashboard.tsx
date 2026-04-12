@@ -90,6 +90,22 @@ export function Dashboard() {
         currentView={view}
       />
 
+      {/* Early Access Banner */}
+      <div className="bg-blue-600/10 border-b border-blue-500/20 px-6 py-2.5">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[10px] font-semibold bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase tracking-wide">Early Access</span>
+            <p className="text-[12px] text-blue-300/80">
+              Docklys is in early access — features may change. We appreciate your feedback.
+            </p>
+          </div>
+          <a href="https://discord.gg/ke5V4NeQ49" target="_blank" rel="noopener noreferrer"
+            className="text-[12px] text-blue-400 hover:text-blue-300 transition-colors cursor-pointer shrink-0">
+            Share feedback →
+          </a>
+        </div>
+      </div>
+
       <AnimatePresence mode="sync">
         {view === 'list' && (
           <PageTransition key="list">
