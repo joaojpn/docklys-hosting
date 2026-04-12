@@ -1,12 +1,12 @@
 <div align="center">
-  <img src="docs/assets/logo-docklys.png" alt="Docklys" width="500" />
+  <img src="docs/assets/Nuvee_typo_logo_white4x.png" alt="Docklys" width="300" />
 
   ### The self-hosted platform for apps deployment
 
   Zip your project. Upload it. Your app is live in seconds.
 
   [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/joaojpn/docklys-hosting/blob/main/LICENSE)
-  ![Version](https://img.shields.io/badge/version-0.5.1-blue)
+  ![Version](https://img.shields.io/badge/version-0.5.3-blue)
   ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)
 
@@ -15,9 +15,9 @@
 
 ---
 
-## What is Docklys?
+## What is Nuvee Cloud?
 
-Docklys is an open-source, self-hosted platform for deploying Discord, Telegram, and WhatsApp bots. No infrastructure knowledge required — just zip your project, upload it, and Docklys handles the rest.
+Nuvee Cloud is an open-source, self-hosted platform for deploying Discord, Telegram, and WhatsApp bots. No infrastructure knowledge required — just zip your project, upload it, and Docklys handles the rest.
 
 ```
 your-bot/
@@ -28,7 +28,7 @@ your-bot/
 **Zip it. Upload it. Done.**
 
 > [!NOTE]
-> Docklys is in active development. Features and APIs may change between versions.
+> Nuvee is in active development. Features and APIs may change between versions.
 
 ---
 
