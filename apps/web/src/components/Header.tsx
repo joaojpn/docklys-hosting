@@ -1,16 +1,12 @@
-import { motion } from 'framer-motion'
-import { LogOut, ExternalLink } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { Avatar, AvatarFallback } from './ui/avatar'
+import { LogOut, ChevronDown, LayoutGrid, User, MessageCircle, BookOpen } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
-import { Button } from './ui/button'
 
 type Props = {
   onLogoClick: () => void
@@ -30,75 +26,80 @@ const DocklysLogo = () => (
 export function Header({ onLogoClick, onProfileClick, currentView }: Props) {
   const { user, signOut } = useAuth()
 
-  return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background ">
-      <div className="max-w-6xl mx-auto px-6 flex h-14 items-center gap-4">
+  const navItems = [
+    { label: 'Applications', view: 'list', icon: LayoutGrid },
+    { label: 'My Account', view: 'profile', icon: User },
+    { label: 'Support', href: 'https://discord.gg/ke5V4NeQ49', icon: MessageCircle },
+    { label: 'Docs', href: 'https://github.com/joaojpn/docklys-hosting', icon: BookOpen },
+  ]
 
-        <motion.button
-          onClick={onLogoClick}
-          className="flex items-center gap-2 cursor-pointer mr-4"
-          whileTap={{ scale: 0.97 }}
-        >
+  return (
+    <header className="w-full border-b border-border/40 bg-background sticky top-0 z-40">
+      {/* Top row */}
+      <div className="max-w-5xl mx-auto px-6 flex items-center justify-between h-12">
+        <button onClick={onLogoClick} className="flex items-center gap-2 cursor-pointer">
           <DocklysLogo />
-          <span className="font-medium text-[15px] tracking-tight" style={{ fontFamily: 'Geist, sans-serif' }}>
+          <span className="font-semibold text-[15px] tracking-tight" style={{ fontFamily: 'Geist, sans-serif' }}>
             Docklys
           </span>
-        </motion.button>
+        </button>
 
-        <nav className="flex items-center gap-1 flex-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onLogoClick}
-            className={`h-8 px-3 text-[13px] cursor-pointer ${currentView === 'list' || currentView === 'details' ? 'text-foreground' : 'text-muted-foreground'}`}
-          >
-            Applications
-          </Button>
-          <a href="https://github.com/joaojpn/docklys-hosting" target="_blank" rel="noopener noreferrer">
-            <Button variant="ghost" size="sm" className="h-8 px-3 text-[13px] text-muted-foreground hover:text-foreground cursor-pointer gap-1.5">
-              Docs
-              <ExternalLink className="w-3 h-3" />
-            </Button>
-          </a>
-          <a href="https://discord.gg/ke5V4NeQ49" target="_blank" rel="noopener noreferrer">
-            <Button variant="ghost" size="sm" className="h-8 px-3 text-[13px] text-muted-foreground hover:text-foreground cursor-pointer gap-1.5">
-              Discord
-              <ExternalLink className="w-3 h-3" />
-            </Button>
-          </a>
-        </nav>
-
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-semibold text-muted-foreground/50 bg-muted/30 border border-border/30 px-2 py-0.5 rounded-md uppercase tracking-wide">Free</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 gap-2 px-2 cursor-pointer">
-                <Avatar className="h-6 w-6">
-                  <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
-                    {user?.name?.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden md:inline text-[13px]">{user?.name?.split(' ')[0]}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-[13px] font-medium">{user?.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{user?.email}</p>
+              <button className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity border border-border/40 bg-muted/20 rounded-lg px-3 py-1.5">
+                <div className="text-left">
+                  <p className="text-[13px] font-medium leading-none">{user?.name}</p>
+                  <p className="text-[11px] text-muted-foreground/50 leading-none mt-0.5">{user?.email}</p>
                 </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/40" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-card border-border/50">
               <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer text-[13px]">
-                Profile
+                My Account
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut} className="cursor-pointer text-[13px] text-destructive focus:text-destructive">
-                <LogOut className="w-3.5 h-3.5 mr-2" />
+              <DropdownMenuItem onClick={signOut} className="cursor-pointer text-[13px] text-destructive focus:text-destructive gap-2">
+                <LogOut className="w-3.5 h-3.5" />
                 Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </div>
+
+      {/* Bottom row — nav */}
+      <div className="max-w-5xl mx-auto px-6 flex items-center border-t border-border/20">
+        {navItems.map(item => {
+          const isActive = item.view === currentView ||
+            (item.view === 'list' && (currentView === 'details' || currentView === 'deploy'))
+          const Icon = item.icon
+
+          if (item.href) {
+            return (
+              <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2.5 text-[13px] text-muted-foreground/50 hover:text-foreground transition-colors cursor-pointer border-b-2 border-transparent">
+                <Icon className="w-3.5 h-3.5" />
+                {item.label}
+              </a>
+            )
+          }
+
+          return (
+            <button key={item.label}
+              onClick={item.view === 'profile' ? onProfileClick : onLogoClick}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] transition-colors cursor-pointer border-b-2 ${
+                isActive
+                  ? 'text-foreground font-medium border-blue-500'
+                  : 'text-muted-foreground/50 hover:text-foreground border-transparent'
+              }`}>
+              <Icon className="w-3.5 h-3.5" />
+              {item.label}
+            </button>
+          )
+        })}
       </div>
     </header>
   )
