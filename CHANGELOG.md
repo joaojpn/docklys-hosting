@@ -1,3 +1,15 @@
+## [0.5.3] - 2026-04-12
+
+### Added
+- Filter dropdown on dashboard with status filter, sort and order options
+
+### Changed
+- Bot list redesigned with card layout showing RAM, uptime and memory usage
+- Bot details redesigned with new header, stats row and tab navigation
+- Navbar redesigned with two-row layout and navigation icons
+- Branding updated from Docklys to Nuvee throughout the app
+- Onboarding improved with animated check circle on last slide
+
 ## [0.5.2] - 2026-04-12
 
 ### Added
