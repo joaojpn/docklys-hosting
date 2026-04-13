@@ -45,6 +45,12 @@ your-bot/
 
   <br />
 
+  <img src="docs/assets/deploy.png" alt="Deploy" width="50%" />
+  <p><em>Deploy applications via zip upload with drag and drop</em></p>
+
+  <img src="docs/assets/onboarding.png" alt="Onboarding" width="50%" />
+  <p><em>Onboarding dialog shown on first login</em></p>
+
   <img src="docs/assets/login.png" alt="Login" width="100%" />
   <p><em>Authentication — GitHub OAuth and email/password</em></p>
 </div>
