@@ -46,8 +46,8 @@ export async function twoFactorRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: 'No 2FA setup in progress. Call /2fa/generate first.' })
     }
 
-    const isValid = await verifyTOTP(token, user.twoFactorTempSecret)
-    if (!isValid) return reply.status(400).send({ error: 'Invalid token. Please try again.' })
+    const { valid, timestamp } = await verifyTOTP(token, user.twoFactorTempSecret, user.lastUsedOtpAt)
+    if (!valid) return reply.status(400).send({ error: 'Invalid token. Please try again.' })
 
     await prisma.user.update({
       where: { id: userId },
@@ -56,6 +56,7 @@ export async function twoFactorRoutes(app: FastifyInstance) {
         twoFactorTempSecret: null,
         twoFactorEnabled: true,
         failedOtpAttempts: 0,
+        lastUsedOtpAt: timestamp,
       },
     })
 
@@ -165,8 +166,8 @@ export async function twoFactorRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: '2FA is not enabled.' })
     }
 
-    const isValid = await verifyTOTP(token, user.twoFactorSecret)
-    if (!isValid) return reply.status(400).send({ error: 'Invalid token.' })
+    const { valid } = await verifyTOTP(token, user.twoFactorSecret, user.lastUsedOtpAt)
+    if (!valid) return reply.status(400).send({ error: 'Invalid or already used token.' })
 
     await prisma.user.update({
       where: { id: userId },
