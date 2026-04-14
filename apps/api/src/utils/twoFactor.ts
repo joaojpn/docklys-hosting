@@ -41,14 +41,30 @@ export async function generateTwoFactorSetup(
   return { encryptedSecret, qrCodeDataUrl, recoveryCodes, hashedRecoveryCodes }
 }
 
-export async function verifyTOTP(token: string, encryptedSecret: string): Promise<boolean> {
-  if (!/^\d{6}$/.test(token)) return false
+export async function verifyTOTP(
+  token: string,
+  encryptedSecret: string,
+  lastUsedOtpAt?: Date | null
+): Promise<{ valid: boolean; timestamp: Date | null }> {
+  if (!/^\d{6}$/.test(token)) return { valid: false, timestamp: null }
 
   const rawSecret = decrypt(encryptedSecret)
   const totp = new TOTP({ secret: Secret.fromBase32(rawSecret), digits: 6, period: 30 })
 
   const delta = totp.validate({ token, window: 1 })
-  return delta !== null
+  if (delta === null) return { valid: false, timestamp: null }
+
+  // Anti-replay: calcular o timestamp do periodo usado
+  const period = 30
+  const now = Math.floor(Date.now() / 1000)
+  const usedPeriodStart = new Date((now - (now % period) + delta * period) * 1000)
+
+  // Rejeitar se o mesmo periodo ja foi usado
+  if (lastUsedOtpAt && lastUsedOtpAt >= usedPeriodStart) {
+    return { valid: false, timestamp: null }
+  }
+
+  return { valid: true, timestamp: usedPeriodStart }
 }
 
 export async function verifyRecoveryCode(
