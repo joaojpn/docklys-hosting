@@ -16,6 +16,7 @@ export async function profileRoutes(app: FastifyInstance) {
         githubLogin: true,
         createdAt: true,
         passwordHash: true,
+        twoFactorEnabled: true,
       },
     })
 
@@ -29,6 +30,7 @@ export async function profileRoutes(app: FastifyInstance) {
         githubLogin: user.githubLogin,
         hasPassword: !!user.passwordHash,
         hasGithub: !!user.githubId,
+        twoFactorEnabled: user.twoFactorEnabled,
         createdAt: user.createdAt,
       }
     })

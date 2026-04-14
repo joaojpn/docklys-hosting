@@ -13,6 +13,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { useAuth } from '../contexts/AuthContext'
 import { OnboardingDialog } from '../components/OnboardingDialog'
+import { TwoFactorSetup } from './TwoFactorSetup'
 
 export type Bot = {
   id: string
@@ -35,12 +36,13 @@ export type DeployedBot = {
 
 export function Dashboard() {
   const { user } = useAuth()
-  const [view, setView] = useState<'list' | 'deploy' | 'details' | 'profile'>('list')
+  const [view, setView] = useState<'list' | 'deploy' | 'details' | 'profile' | '2fa'>('list')
   const [bots, setBots] = useState<Bot[]>([])
   const [loading, setLoading] = useState(true)
   const [successData, setSuccessData] = useState<DeployedBot | null>(null)
   const [selectedBot, setSelectedBot] = useState<Bot | null>(null)
   const [search, setSearch] = useState('')
+  const [profileKey, setProfileKey] = useState(0)
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('@Docklys:onboarded'))
 
   const handleCloseOnboarding = () => {
@@ -266,7 +268,13 @@ export function Dashboard() {
 
         {view === 'profile' && (
           <PageTransition key="profile">
-            <ProfilePage onBack={() => setView('list')} />
+            <ProfilePage key={profileKey} onBack={() => setView('list')} onSetup2FA={() => setView('2fa')} />
+          </PageTransition>
+        )}
+
+        {view === '2fa' && (
+          <PageTransition key="2fa">
+            <TwoFactorSetup onBack={() => setView('profile')} onSuccess={() => { setProfileKey(k => k + 1); setView('profile') }} />
           </PageTransition>
         )}
       </AnimatePresence>

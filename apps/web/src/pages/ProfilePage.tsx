@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
 import { Loader2, CheckCircle, Trash2, User, Lock, Link2, AlertTriangle, ArrowLeft, Shield } from 'lucide-react'
+import { TwoFactorSection } from '../components/dashboard/TwoFactorSection'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
@@ -20,10 +21,11 @@ type Profile = {
   githubLogin: string | null
   hasPassword: boolean
   hasGithub: boolean
+  twoFactorEnabled: boolean
   createdAt: string
 }
 
-type Props = { onBack: () => void }
+type Props = { onBack: () => void; onSetup2FA: () => void }
 type Section = 'account' | 'security' | 'connections' | 'danger'
 
 const navItems = [
@@ -47,7 +49,7 @@ function Field({ label, description, children }: { label: string; description?: 
   )
 }
 
-export function ProfilePage({ onBack }: Props) {
+export function ProfilePage({ onBack, onSetup2FA }: Props) {
   const { signOut, updateUser } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -204,13 +206,16 @@ export function ProfilePage({ onBack }: Props) {
                   </Field>
                 </>
               ) : (
-                <div className="py-5">
-                  <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-border/40 max-w-md">
-                    <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <p className="text-[13px] text-muted-foreground">Your account uses GitHub OAuth. No password is set.</p>
-                  </div>
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-border/40 max-w-md">
+                  <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <p className="text-[13px] text-muted-foreground">Your account uses GitHub OAuth. No password is set.</p>
                 </div>
               )}
+              <div className="pt-5">
+                <p className="text-[13px] font-medium mb-1">Two-Factor Authentication</p>
+                <p className="text-[12px] text-muted-foreground mb-3">Add an extra layer of security to your account.</p>
+                <TwoFactorSection enabled={profile?.twoFactorEnabled || false} onSetup={onSetup2FA} onUpdate={() => api.get("/profile").then(res => setProfile(res.data.user))} />
+              </div>
             </div>
           )}
 
