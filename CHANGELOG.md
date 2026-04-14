@@ -1,3 +1,14 @@
+## [0.6.0] - 2026-04-14
+
+### Added
+- Two-Factor Authentication (2FA) with TOTP support
+- QR code generation for authenticator apps (Google Authenticator, Authy, etc.)
+- 10 single-use recovery codes with bcrypt hashing
+- Step-by-step 2FA setup page with progress indicator
+- Account lockout after 5 failed OTP attempts (15 minutes)
+- AES-256-GCM encryption for TOTP secrets stored in database
+- Disable 2FA with token confirmation
+
 ## [0.5.3] - 2026-04-12
 
 ### Added
