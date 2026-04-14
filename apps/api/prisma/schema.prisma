@@ -1,24 +1,26 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
 }
-
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  passwordHash String?
-  githubId     String?  @unique
-  githubLogin  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  bots Bot[]
+  id                   String    @id @default(uuid())
+  name                 String
+  email                String    @unique
+  passwordHash         String?
+  githubId             String?   @unique
+  githubLogin          String?
+  twoFactorEnabled     Boolean   @default(false)
+  twoFactorSecret      String?
+  twoFactorTempSecret  String?
+  recoveryCodes        String[]
+  failedOtpAttempts    Int       @default(0)
+  otpLockedUntil       DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  bots                 Bot[]
 }
-
 model Bot {
   id           String    @id @default(uuid())
   name         String
@@ -31,18 +33,15 @@ model Bot {
   envVars      EnvVar[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
-
 enum BotStatus {
   RUNNING
   STOPPED
   ERROR
   DEPLOYING
 }
-
 model EnvVar {
   id        String   @id @default(uuid())
   key       String
@@ -50,6 +49,5 @@ model EnvVar {
   botId     String
   bot       Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
-
   @@unique([botId, key])
 }
