@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../../plugins/prisma'
 import { detectLanguage } from '../deploy/language-detector'
+import { audit, getIp } from '../../utils/audit'
 import { buildAndRun, extractZip, removeContainer, getContainerStats } from '../deploy/docker.service'
 import path from 'path'
 import fs from 'fs'
@@ -152,6 +153,7 @@ export async function botsRoutes(app: FastifyInstance) {
       const Dockerode = (await import('dockerode')).default
       const docker = new Dockerode()
       await docker.getContainer(bot.containerId).stop()
+      await audit({ userId, action: 'STOP_BOT', ipAddress: getIp(request), metadata: { botId: id, botName: bot.name } })
 
       await prisma.bot.update({ where: { id }, data: { status: 'STOPPED' } })
 
@@ -173,6 +175,7 @@ export async function botsRoutes(app: FastifyInstance) {
       const Dockerode = (await import('dockerode')).default
       const docker = new Dockerode()
       await docker.getContainer(bot.containerId).restart()
+      await audit({ userId, action: 'RESTART_BOT', ipAddress: getIp(request), metadata: { botId: id, botName: bot.name } })
 
       await prisma.bot.update({ where: { id }, data: { status: 'RUNNING' } })
 
@@ -197,6 +200,7 @@ export async function botsRoutes(app: FastifyInstance) {
       fs.rmSync(extractPath, { recursive: true, force: true })
 
       await prisma.bot.delete({ where: { id } })
+      await audit({ userId, action: 'DELETE_BOT', ipAddress: getIp(request), metadata: { botId: id, botName: bot.name } })
 
       return reply.send({ success: true })
     } catch (err: any) {

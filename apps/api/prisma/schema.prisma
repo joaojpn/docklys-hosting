@@ -43,6 +43,16 @@ enum BotStatus {
   ERROR
   DEPLOYING
 }
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  userEmail String?
+  action    String
+  ipAddress String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
 model EnvVar {
   id        String   @id @default(uuid())
   key       String

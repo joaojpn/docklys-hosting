@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../../plugins/prisma'
 import { generateTwoFactorSetup, verifyTOTP, verifyRecoveryCode } from '../../utils/twoFactor'
+import { audit, getIp } from '../../utils/audit'
 
 const APP_NAME = process.env.APP_NAME || 'Nuvee'
 const MAX_FAILED_ATTEMPTS = 5
@@ -60,6 +61,7 @@ export async function twoFactorRoutes(app: FastifyInstance) {
       },
     })
 
+    await audit({ userId, action: '2FA_ENABLED', ipAddress: getIp(request) })
     return reply.send({ message: '2FA has been enabled successfully.' })
   })
 
@@ -147,6 +149,7 @@ export async function twoFactorRoutes(app: FastifyInstance) {
 
     const remaining = updatedCodes.length
 
+    await audit({ userId, action: '2FA_RECOVERY_USED', ipAddress: getIp(request), metadata: { remainingCodes: remaining } })
     return reply.send({
       message: `Recovery code accepted. ${remaining} code(s) remaining.`,
       ...(remaining <= 2 ? { warning: 'You have very few recovery codes left. Consider regenerating them.' } : {}),
@@ -181,6 +184,7 @@ export async function twoFactorRoutes(app: FastifyInstance) {
       },
     })
 
+    await audit({ userId, action: '2FA_DISABLED', ipAddress: getIp(request) })
     return reply.send({ message: '2FA has been disabled.' })
   })
 }
