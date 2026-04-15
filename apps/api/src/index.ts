@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import multipart from '@fastify/multipart'
+import rateLimit from '@fastify/rate-limit'
 import { authRoutes } from './modules/auth/auth.controller'
 import { botsRoutes } from './modules/bots/bots.controller'
 import { logsRoutes } from './modules/bots/logs.controller'
@@ -25,6 +26,18 @@ app.register(multipart, {
   limits: { fileSize: 50 * 1024 * 1024 },
 })
 
+// Global rate limit
+app.register(rateLimit, {
+  global: true,
+  max: 100,
+  timeWindow: '1 minute',
+  errorResponseBuilder: () => ({
+    error: 'Too many requests. Please slow down.',
+  }),
+})
+
+
+
 async function authenticate(request: any, reply: any) {
   const authHeader = request.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -39,7 +52,19 @@ async function authenticate(request: any, reply: any) {
   }
 }
 
-app.register(authRoutes)
+// Auth routes with strict rate limit
+app.register(async (instance) => {
+  instance.register(rateLimit, {
+    max: 10,
+    timeWindow: '15 minutes',
+    keyGenerator: (request: any) =>
+      request.headers['x-forwarded-for']?.split(',')[0]?.trim() || request.ip,
+    errorResponseBuilder: () => ({
+      error: 'Too many attempts from this IP. Try again in 15 minutes.',
+    }),
+  })
+  instance.register(authRoutes)
+})
 app.register(logsRoutes)
 
 app.register(async (instance) => {
