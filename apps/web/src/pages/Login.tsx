@@ -1,8 +1,7 @@
 import { useState } from 'react'
-
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ShieldCheck } from 'lucide-react'
 import { api } from '../services/api'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -16,7 +15,7 @@ const GithubIcon = () => (
 )
 
 export function Login() {
-  const { signIn, signInWithGithub } = useAuth()
+  const { signIn, signInWithGithub, updateUser } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -24,13 +23,24 @@ export function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // 2FA state
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [tempToken, setTempToken] = useState('')
+  const [otpToken, setOtpToken] = useState('')
+  const [rememberDevice, setRememberDevice] = useState(false)
+  const [verifying2FA, setVerifying2FA] = useState(false)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     try {
       if (isLogin) {
-        await signIn({ email, password })
+        const result = await signIn({ email, password })
+        if (result.requires2FA && result.tempToken) {
+          setTempToken(result.tempToken)
+          setRequires2FA(true)
+        }
       } else {
         await api.post('/auth/register', { name, email, password })
         await signIn({ email, password })
@@ -38,65 +48,96 @@ export function Login() {
     } catch (err: any) {
       setError(err.response?.data?.error || 'Something went wrong. Please try again.')
       setLoading(false)
+    } finally {
+      if (!requires2FA) setLoading(false)
     }
+  }
+
+  const handle2FAVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setVerifying2FA(true)
+    setError('')
+    try {
+      const res = await api.post('/auth/2fa/verify', { tempToken, token: otpToken, rememberDevice })
+      const { token, user } = res.data
+      localStorage.setItem('@Docklys:token', token)
+      localStorage.setItem('@Docklys:user', JSON.stringify(user))
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      updateUser(user)
+      window.location.href = '/'
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Invalid code. Please try again.')
+    } finally {
+      setVerifying2FA(false)
+    }
+  }
+
+  // 2FA verification screen
+  if (requires2FA) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="w-full max-w-sm space-y-5 relative z-10">
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="space-y-1 pb-4">
+              <div className="flex justify-center mb-2">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <ShieldCheck className="w-6 h-6 text-primary" />
+                </div>
+              </div>
+              <CardTitle className="text-xl text-center" style={{ fontFamily: 'Geist, sans-serif' }}>
+                Two-Factor Authentication
+              </CardTitle>
+              <CardDescription className="text-center text-[13px]">
+                Enter the 6-digit code from your authenticator app.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={handle2FAVerify} className="space-y-4">
+                <div className="flex justify-center">
+                  <Input
+                    placeholder="000000"
+                    value={otpToken}
+                    onChange={e => setOtpToken(e.target.value.replace(/\D/g, ''))}
+                    maxLength={6}
+                    className="text-[20px] font-mono tracking-[0.4em] text-center h-12 w-44"
+                    autoFocus
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer justify-center">
+                  <input type="checkbox" checked={rememberDevice} onChange={e => setRememberDevice(e.target.checked)}
+                    className="w-4 h-4 rounded cursor-pointer accent-blue-600" />
+                  <span className="text-[12px] text-muted-foreground">Remember this device for 30 days</span>
+                </label>
+                {error && <p className="text-[12px] text-destructive text-center">{error}</p>}
+                <Button type="submit" className="w-full cursor-pointer text-[13px] bg-blue-600 hover:bg-blue-500" disabled={verifying2FA || otpToken.length !== 6}>
+                  {verifying2FA && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Verify
+                </Button>
+              </form>
+              <button onClick={() => { setRequires2FA(false); setOtpToken(''); setError('') }}
+                className="w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                Back to login
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff06_1px,transparent_1px),linear-gradient(to_bottom,#ffffff06_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-
-      {/* Glow blob 1 */}
-      <motion.div
-        className="absolute pointer-events-none"
-        animate={{
-          scale: [1, 1.15, 0.95, 1],
-          borderRadius: [
-            '60% 40% 70% 30% / 50% 60% 40% 50%',
-            '40% 60% 30% 70% / 60% 40% 60% 40%',
-            '70% 30% 60% 40% / 40% 50% 60% 50%',
-            '60% 40% 70% 30% / 50% 60% 40% 50%',
-          ],
-        }}
+      <motion.div className="absolute pointer-events-none"
+        animate={{ scale: [1, 1.15, 0.95, 1], borderRadius: ['60% 40% 70% 30% / 50% 60% 40% 50%','40% 60% 30% 70% / 60% 40% 60% 40%','60% 40% 70% 30% / 50% 60% 40% 50%'] }}
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        style={{
-          width: '500px',
-          height: '350px',
-          background: 'rgba(37, 99, 235, 0.15)',
-          filter: 'blur(70px)',
-          position: 'absolute',
-          top: 'calc(50% - 175px)',
-          left: 'calc(50% - 250px)',
-        }}
+        style={{ width: '500px', height: '350px', background: 'rgba(37, 99, 235, 0.12)', filter: 'blur(70px)', position: 'absolute', top: 'calc(50% - 175px)', left: 'calc(50% - 250px)' }}
       />
-
-      {/* Glow blob 2 */}
-      <motion.div
-        className="absolute pointer-events-none"
-        animate={{
-          scale: [1, 0.9, 1.1, 1],
-          borderRadius: [
-            '40% 60% 30% 70% / 60% 40% 60% 40%',
-            '60% 40% 70% 30% / 50% 60% 40% 50%',
-            '30% 70% 40% 60% / 40% 60% 50% 50%',
-            '40% 60% 30% 70% / 60% 40% 60% 40%',
-          ],
-        }}
+      <motion.div className="absolute pointer-events-none"
+        animate={{ scale: [1, 0.9, 1.1, 1] }}
         transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-        style={{
-          width: '350px',
-          height: '250px',
-          background: 'rgba(99, 102, 241, 0.1)',
-          filter: 'blur(60px)',
-          position: 'absolute',
-          top: 'calc(50% - 175px)',
-          left: 'calc(50% - 280px)',
-        }}
+        style={{ width: '350px', height: '250px', background: 'rgba(99, 102, 241, 0.08)', filter: 'blur(60px)', position: 'absolute', top: 'calc(50% - 175px)', left: 'calc(50% - 280px)' }}
       />
-
       <div className="w-full max-w-sm space-y-5 relative z-10">
-        <div className="flex justify-center">
-        </div>
-
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl text-center" style={{ fontFamily: 'Geist, sans-serif' }}>
@@ -151,9 +192,9 @@ export function Login() {
         </Card>
 
         <p className="text-center text-[11px] text-muted-foreground">
-          By continuing, you agree to our{' '}
+          By continuing, you agree to our{" "}
           <a href="#" className="underline hover:text-foreground transition-colors">Terms of Service</a>
-          {' '}and{' '}
+          {" "}and{" "}
           <a href="#" className="underline hover:text-foreground transition-colors">Privacy Policy</a>.
         </p>
       </div>

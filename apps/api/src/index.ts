@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import multipart from '@fastify/multipart'
 import rateLimit from '@fastify/rate-limit'
+import cookie from '@fastify/cookie'
 import { authRoutes } from './modules/auth/auth.controller'
 import { botsRoutes } from './modules/bots/bots.controller'
 import { logsRoutes } from './modules/bots/logs.controller'
@@ -20,6 +21,11 @@ app.register(cors, {
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
+  exposedHeaders: ['set-cookie'],
+})
+
+app.register(cookie, {
+  secret: process.env.JWT_SECRET!,
 })
 
 app.register(multipart, {
