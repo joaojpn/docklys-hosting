@@ -1,3 +1,18 @@
+## [0.7.0] - 2026-04-15
+
+### Added
+- Anti-replay protection for 2FA codes using lastUsedOtpAt timestamp
+- Audit logging for all critical events (LOGIN, REGISTER, DEPLOY, DELETE, STOP, RESTART, 2FA events)
+- Advanced IP throttling — 10 attempts per 15 minutes per IP on auth routes
+- 2FA verification integrated into login flow with tempToken
+- "Remember this device for 30 days" via HttpOnly cookie
+- TrustedDevice table for managing trusted devices per user
+- New endpoint POST /auth/2fa/verify for OTP verification during login
+
+### Changed
+- Login now returns requires2FA flag when 2FA is enabled
+- Auth routes have strict rate limiting separate from global limit
+
 ## [0.6.0] - 2026-04-14
 
 ### Added
