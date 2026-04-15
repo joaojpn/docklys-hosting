@@ -22,5 +22,5 @@ export async function validateUser(email: string, password: string) {
   const valid = await bcrypt.compare(password, user.passwordHash)
   if (!valid) throw new Error('Invalid credentials')
 
-  return { id: user.id, name: user.name, email: user.email }
+  return { id: user.id, name: user.name, email: user.email, twoFactorEnabled: user.twoFactorEnabled }
 }

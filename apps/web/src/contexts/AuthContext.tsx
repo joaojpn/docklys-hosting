@@ -10,7 +10,7 @@ interface User {
 interface AuthContextData {
   signed: boolean
   user: User | null
-  signIn: (data: { email: string; password: string }) => Promise<void>
+  signIn: (data: { email: string; password: string }) => Promise<{ requires2FA: boolean; tempToken?: string }>
   signInWithGithub: () => void
   signOut: () => void
   updateUser: (data: Partial<User>) => void
@@ -35,11 +35,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   async function signIn({ email, password }: { email: string; password: string }) {
     const response = await api.post('/auth/login', { email, password })
-    const { token, user } = response.data
+    const { token, user, requires2FA, tempToken } = response.data
+
+    if (requires2FA) {
+      return { requires2FA: true, tempToken }
+    }
+
     localStorage.setItem('@Docklys:user', JSON.stringify(user))
     localStorage.setItem('@Docklys:token', token)
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`
     setUser(user)
+    return { requires2FA: false }
   }
 
   function signInWithGithub() {
