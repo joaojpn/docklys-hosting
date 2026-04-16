@@ -2,6 +2,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
 import { AuthCallback } from './pages/AuthCallback'
+import { TermsOfService } from './pages/TermsOfService'
+import { PrivacyPolicy } from './pages/PrivacyPolicy'
 import { Loader2 } from 'lucide-react'
 
 function Routes() {
@@ -17,6 +19,12 @@ function Routes() {
 
   if (window.location.pathname === '/auth/callback') {
     return <AuthCallback />
+  }
+  if (window.location.pathname === '/terms') {
+    return <TermsOfService onBack={() => window.history.back()} />
+  }
+  if (window.location.pathname === '/privacy') {
+    return <PrivacyPolicy onBack={() => window.history.back()} />
   }
 
   if (!signed) {
