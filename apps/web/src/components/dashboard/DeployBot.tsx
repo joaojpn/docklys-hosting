@@ -1,11 +1,32 @@
 import { useState, useRef, DragEvent } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { api } from '../../services/api'
-import { Upload, ArrowLeft, Loader2, File } from 'lucide-react'
+import { Upload, ArrowLeft, Loader2, File, ChevronDown, Info } from 'lucide-react'
+import { useState as useTooltipState } from 'react'
 import { DeployedBot } from '../../pages/Dashboard'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
-import { Separator } from '../ui/separator'
+
+function Tooltip({ text }: { text: string }) {
+  const [show, setShow] = useTooltipState(false)
+  return (
+    <div className="relative inline-flex items-center">
+      <button
+        type="button"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-default"
+      >
+        <Info className="w-3.5 h-3.5" />
+      </button>
+      {show && (
+        <div className="absolute left-5 top-1/2 -translate-y-1/2 z-50 w-56 p-2.5 rounded-lg bg-card border border-border/50 shadow-xl text-[12px] text-muted-foreground leading-relaxed">
+          {text}
+        </div>
+      )}
+    </div>
+  )
+}
 
 type Props = {
   onBack: () => void
@@ -61,7 +82,7 @@ export function DeployBot({ onBack, onSuccess }: Props) {
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-8">
+    <main className="max-w-xl mx-auto px-6 py-8">
       <motion.button
         onClick={onBack}
         className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-8"
@@ -72,113 +93,120 @@ export function DeployBot({ onBack, onSuccess }: Props) {
       </motion.button>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Geist, sans-serif' }}>
-          Deploy Application
+        <h1 className="text-[22px] font-bold tracking-tight" style={{ fontFamily: 'Geist, sans-serif' }}>
+          New Application
         </h1>
-        <p className="text-[13px] text-muted-foreground mt-1">Upload a .zip file to deploy your bot.</p>
+        <p className="text-[13px] text-muted-foreground mt-1">Deploy your bot in seconds.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-12">
-        {/* Left — upload */}
-        <div className="space-y-6">
-          <div
-            onDragOver={e => { e.preventDefault(); setDragging(true) }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={handleDrop}
-            onClick={() => fileRef.current?.click()}
-            className={`relative border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer transition-all aspect-[4/3] ${
-              dragging ? 'border-primary/60 bg-primary/5' :
-              file ? 'border-blue-500/40 bg-blue-500/5' :
-              'border-border/50 hover:border-border/80 bg-muted/10 hover:bg-muted/20'
-            }`}
-          >
+      <div className="space-y-5">
+
+        {/* Upload */}
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[13px] font-medium">Project file</span>
+          <Tooltip text="Zip your project folder with all source files. Make sure to include requirements.txt (Python) or package.json (Node.js) at the root level." />
+        </div>
+        <div
+          onDragOver={e => { e.preventDefault(); setDragging(true) }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
+          onClick={() => fileRef.current?.click()}
+          className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all ${
+            dragging ? 'border-blue-500/60 bg-blue-500/5' :
+            file ? 'border-blue-500/30 bg-blue-500/5' :
+            'border-border/40 hover:border-border/70 bg-muted/5 hover:bg-muted/10'
+          }`}
+        >
+          <AnimatePresence mode="wait">
             {file ? (
-              <>
-                <div className="w-14 h-14 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                  <File className="w-7 h-7 text-blue-400" />
+              <motion.div key="file" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center gap-2 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                  <File className="w-6 h-6 text-blue-400" />
                 </div>
-                <div className="text-center">
-                  <p className="text-[14px] font-semibold text-foreground">{file.name}</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">{(file.size / 1024).toFixed(1)} KB</p>
+                <div>
+                  <p className="text-[14px] font-semibold">{file.name}</p>
+                  <p className="text-[12px] text-muted-foreground">{(file.size / 1024).toFixed(1)} KB · click to change</p>
                 </div>
-                <p className="text-[11px] text-muted-foreground/60">click to change</p>
-              </>
+              </motion.div>
             ) : (
-              <>
-                <div className="w-12 h-12 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-center">
+              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center gap-2 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-muted/40 border border-border/40 flex items-center justify-center">
                   <Upload className="w-6 h-6 text-muted-foreground" />
                 </div>
-                <div className="text-center">
-                  <p className="text-[14px] font-semibold">Select a .zip file</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">or drag and drop here</p>
+                <div>
+                  <p className="text-[14px] font-semibold">Drop your .zip file here</p>
+                  <p className="text-[12px] text-muted-foreground">or click to browse</p>
                 </div>
-              </>
+              </motion.div>
             )}
-            <input ref={fileRef} type="file" accept=".zip" className="hidden" onChange={handleFileChange} />
-          </div>
-
-
+          </AnimatePresence>
+          <input ref={fileRef} type="file" accept=".zip" className="hidden" onChange={handleFileChange} />
         </div>
 
-        {/* Right — config */}
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-medium">Application name <span className="text-destructive">*</span></label>
-              <Input placeholder="My Bot" value={name} onChange={e => setName(e.target.value)} className="text-[13px] cursor-text" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-medium">Memory <span className="text-destructive">*</span></label>
-              <select
-                value={memory}
-                onChange={e => setMemory(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-background px-3 text-[13px] cursor-pointer outline-none focus:ring-1 focus:ring-ring transition-all text-foreground"
-              >
-                <option value="128">128 MB</option>
-                <option value="256">256 MB</option>
-                <option value="512">512 MB</option>
-                <option value="1024">1024 MB</option>
-              </select>
-            </div>
-          </div>
+        {/* Name */}
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium">Application name <span className="text-destructive">*</span></label>
+          <Input placeholder="My Bot" value={name} onChange={e => setName(e.target.value)} className="text-[13px] cursor-text" />
+        </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-medium">Description</label>
-            <Input placeholder="A short description of your bot" value={description} onChange={e => setDescription(e.target.value)} className="text-[13px] cursor-text" />
-          </div>
+        {/* Description */}
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium text-muted-foreground">Description <span className="font-normal text-[12px]">(optional)</span></label>
+          <Input placeholder="What does your bot do?" value={description} onChange={e => setDescription(e.target.value)} className="text-[13px] cursor-text" />
+        </div>
 
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-[13px] font-medium">Auto Restart</p>
-                <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full font-medium uppercase tracking-wide">Recommended</span>
-              </div>
-              <p className="text-[12px] text-muted-foreground mt-0.5">Automatically restarts the bot on failure.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setAutoRestart(!autoRestart)}
-              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors cursor-pointer ${autoRestart ? "bg-blue-600" : "bg-muted"}`}
+        {/* Memory */}
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium flex items-center gap-1.5">
+            Memory limit
+            <Tooltip text="128 MB is enough for simple bots. Use 256 MB or more for bots with heavy processing, image generation, or multiple concurrent users." />
+          </label>
+          <div className="relative">
+            <select
+              value={memory}
+              onChange={e => setMemory(e.target.value)}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 pr-8 text-[13px] cursor-pointer outline-none focus:ring-1 focus:ring-ring transition-all text-foreground appearance-none"
             >
-              <span className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg transition-transform ${autoRestart ? 'translate-x-5' : 'translate-x-1'}`} />
-            </button>
+              <option value="128">128 MB</option>
+              <option value="256">256 MB</option>
+              <option value="512">512 MB</option>
+              <option value="1024">1024 MB</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           </div>
-
-          <Separator />
-
-          {error && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-[12px]">
-              {error}
-            </div>
-          )}
-
-          <Button onClick={handleSubmit} disabled={loading} className="w-full cursor-pointer bg-blue-600 hover:bg-blue-500" size="lg">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            {loading ? 'Deploying...' : 'Deploy Bot'}
-          </Button>
         </div>
+
+        {/* Auto Restart */}
+        <div className="flex items-center justify-between py-3 border-t border-border/30">
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="text-[13px] font-medium">Auto Restart</p>
+              <span className="text-[10px] bg-blue-600/10 text-blue-400 border border-blue-600/20 px-2 py-0.5 rounded-full font-medium uppercase tracking-wide">Recommended</span>
+            </div>
+            <p className="text-[12px] text-muted-foreground mt-0.5">Restarts automatically on failure.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAutoRestart(!autoRestart)}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors cursor-pointer ${autoRestart ? "bg-blue-600" : "bg-muted"}`}
+          >
+            <span className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg transition-transform ${autoRestart ? 'translate-x-5' : 'translate-x-1'}`} />
+          </button>
+        </div>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-[12px]">
+            {error}
+          </div>
+        )}
+
+        <Button onClick={handleSubmit} disabled={loading} className="w-full cursor-pointer bg-blue-600 hover:bg-blue-500" size="lg">
+          {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+          {loading ? 'Deploying...' : 'Deploy'}
+        </Button>
+
       </div>
     </main>
   )
