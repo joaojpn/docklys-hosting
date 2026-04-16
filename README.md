@@ -6,7 +6,7 @@
   Zip your project. Upload it. Your app is live in seconds.
 
   [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/joaojpn/docklys-hosting/blob/main/LICENSE)
-  ![Version](https://img.shields.io/badge/version-0.7.0-blue)
+  ![Version](https://img.shields.io/badge/version-0.7.1-blue)
   ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)
 
