@@ -1,3 +1,14 @@
+## [0.7.1] - 2026-04-16
+
+### Added
+- Terms of Service page (Delaware law, LGPD, DMCA, refund policy)
+- Privacy Policy page (LGPD/CCPA, data retention table, DPO contact)
+- Tooltips on deploy page fields
+
+### Changed
+- Empty state redesigned with step-by-step guide, stepper connector and official language logos
+- Deploy page redesigned with cleaner single column layout and drag and drop animation
+
 ## [0.7.0] - 2026-04-15
 
 ### Added
